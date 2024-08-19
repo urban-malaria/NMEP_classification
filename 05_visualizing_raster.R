@@ -1,4 +1,4 @@
-#Visualizing urban sprawl maps
+#Visualizing landcover urban sprawl maps
 
 library(raster)
 library(sf)

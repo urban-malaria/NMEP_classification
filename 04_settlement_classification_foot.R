@@ -1,16 +1,20 @@
 ### Classification of wards with building footprints
 rm(list =ls())
 
+# install foot package from github
+#devtools::install_github("wgpg/foot", build_vignettes=TRUE)
+
+#load packages including foot
 library(sf)
 library(dplyr)
 library(ggplot2)
 library(foot)
 
-
 Drive <- gsub("Documents", "", Sys.getenv("HOME"))
 DriveDir <- file.path(Drive, "Urban Malaria Proj Dropbox", "urban_malaria") 
 CitiesshpDir <- file.path(DriveDir, "data/nigeria/shapefiles/ShinyApp_shapefiles")
 FootprintsDir <- file.path(DriveDir, "data/nigeria/building_footprints")
+GriddedWardsDir <- file.path(CitiesshpDir, "gridded")
 
 
 #Warri
@@ -33,8 +37,7 @@ write(warri_wkt, file = "C:/Users/USER/Downloads/warripolygon.txt")
 
 asaba_shp <- st_read(file.path(CitiesshpDir, "Asaba", "Asaba.shp"))
 
-asaba_footprints <- read.csv(file.path(FootprintsDir, "open_buildings_v3_polygons_asaba_polygon.csv",
-                               "tmps0cxldxa.csv"))
+asaba_footprints <- read.csv(file.path(FootprintsDir, "Asaba.csv"))
 asaba_footprints <- st_as_sf(asaba_footprints, wkt = "geometry")
 st_crs(asaba_footprints) <- 4326
   
@@ -84,8 +87,7 @@ cities <- c("Abeokuta", "Damaturu", "Dutse", "Gombe", "Ilorin", "Jalingo", "Kano
 
 abeokuta_shp <- st_read(file.path(CitiesshpDir, "Abeokuta", "Abeokuta.shp"))
 
-abeokuta_footprints <- read.csv(file.path(FootprintsDir, "open_buildings_v3_polygons_Abeokuta_wkt_polygon.csv",
-                                       "tmpo6psvfg_.csv"))
+abeokuta_footprints <- read.csv(file.path(FootprintsDir, "Abeokuta.csv"))
 abeokuta_footprints <- st_as_sf(abeokuta_footprints, wkt = "geometry")
 st_crs(abeokuta_footprints) <- 4326
 
