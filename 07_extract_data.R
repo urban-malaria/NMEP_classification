@@ -1,4 +1,5 @@
 ##Extract environmental variables for Warri and Asaba
+rm(list = ls())
 
 library(raster)
 library(sf)
@@ -10,6 +11,7 @@ library(purrr)
 library(haven)
 library(stars)
 library(gridExtra)
+library(tidyr)
 
 
 #Load directories
@@ -170,8 +172,8 @@ write.csv(asaba_variables, file.path(ShpDir, "asaba_variables.csv"))
 
 
 #read summarized variables
-warri_variables <- readRDS("warri_var.RDS")
-asaba_variables <- readRDS("asaba_var.RDS")
+warri_variables <- readRDS(file.path("~/warri_var.RDS"))
+asaba_variables <- readRDS(file.path("~/asaba_var.RDS"))
 
 
 ### Relative humidity 2
@@ -480,4 +482,150 @@ warri_variables$housing_quality <- warri_housing$X2019_Nature_Africa_Housing_201
 
 asaba_housing<- extract(housing_quality, asaba_shp, fun = mean, df = TRUE)
 asaba_variables$housing_quality <- asaba_housing$X2019_Nature_Africa_Housing_2015_NGA
+
+
+################################################################################
+##################Settlement Type Analysis######################################
+################################################################################
+
+#settlment_type <- raster(file.path(RasterDir, "nigeria_settlements_Worldpop",
+                                   "NGA_settlement_sample.tif"))
+#warri_settlement<- extract(settlment_type, warri_shp, fun = mean, df = TRUE)
+
+
+settlement_blocks <- st_read(file.path(RasterDir, "nigeria_settlement_classification", "blocks_V1.1",
+                                       "Nigeria_Blocks_V1.shp")) %>% 
+  filter(state == 'Delta', landuse =='Residential')
+
+
+st_crs(warri_shp)
+
+st_crs(settlement_blocks)
+
+warri_shp <- st_transform(warri_shp, crs = st_crs(settlement_blocks))
+
+warri_settlement <- st_join(warri_shp, settlement_blocks, 
+                            join = sf::st_overlaps)
+
+ko_bar_dat <- warri_settlement
+sf::st_geometry(ko_bar_dat) <- NULL
+
+ko_bar_overall = ko_bar_dat %>% 
+  dplyr::select(type) %>%  
+  group_by(type) %>%  
+  summarise(number = n())
+
+settlement_type_warri = warri_settlement %>% 
+  dplyr::select(WardName, settle_type = type) %>% 
+  group_by(WardName, settle_type) %>% 
+  summarise(number = n())
+
+ggplot()+
+  geom_sf(data = warri_shp)+
+  geom_sf(data = settlement_type_warri, aes(geometry = geometry, fill = number))+
+  scale_fill_continuous(low = "lightyellow", high = "brown", na.value = "grey")+
+  facet_wrap(~settle_type)+
+  labs(title = "Settlement Types in Warri")+
+  map_theme()
+
+sf::st_geometry(settlement_type_warri) <- NULL 
+
+warri_settlement_types <- settlement_type_warri %>% 
+  mutate(number = ifelse(is.na(number), 0,  number)) %>% 
+  pivot_wider(names_from = settle_type, values_from = number)
+
+plotting <- warri_shp %>% 
+  inner_join(settlement_type_warri) %>% 
+  group_by(WardName) %>% 
+  mutate(total_settlement = sum(number),
+         proportion_settlement_type = number / total_settlement) %>% 
+  ungroup() %>% 
+  mutate(class_stmnt_number = cut(number, c(0,2,4,6,8,10,15,20,30,50, 78), include.lowest = T),
+         class_stmnt_proportion = cut(proportion_settlement_type, seq(0,1,0.2)))
+
+plotting_v2 = plotting %>% 
+  mutate(grp = ifelse(settle_type == "A" | settle_type == "B" | settle_type == "M", "Poor", "Good")) %>%
+  group_by(WardName, grp, total_settlement) %>% 
+  summarise(grp_number = sum(number)) %>% 
+  mutate(proportion_settlement_type_grp = grp_number / total_settlement,
+         grp_proportion = cut(proportion_settlement_type_grp, seq(0, 1, 0.2), include.lowest = T))
+
+plotting_00 <- plotting_v2 %>% 
+  filter(grp == "Poor") %>% 
+  select(WardName, settlement_type = proportion_settlement_type_grp) %>% 
+  st_drop_geometry()
+
+palettes <- list((RColorBrewer::brewer.pal(10, "RdYlBu")))
+
+
+warri_variables <- left_join(warri_variables, plotting_00, by = "WardName")
+
+ggplot()+
+  geom_sf(data = warri_variables, aes(geometry = geometry, fill = settlement_type))+
+  scale_fill_continuous(low = "lightyellow", high = "brown", na.value = "grey")+
+  labs(title = "Settlement Type in Warri",
+       caption = "Proportion of settlements that are classified as 'Poor', Ugborodo has no data")+
+  map_theme()
+
+
+#Asaba
+
+asaba_settlement <- st_join(asaba_shp, settlement_blocks, 
+                            join = sf::st_overlaps)
+
+settlement_type_asaba = asaba_settlement %>% 
+  dplyr::select(WardName, settle_type = type) %>% 
+  group_by(WardName, settle_type) %>% 
+  summarise(number = n())
+
+ggplot()+
+  geom_sf(data = asaba_shp)+
+  geom_sf(data = settlement_type_asaba, aes(geometry = geometry, fill = number))+
+  scale_fill_continuous(low = "lightyellow", high = "brown", na.value = "grey")+
+  facet_wrap(~settle_type)+
+  labs(title = "Settlement Types in Asaba",
+       caption = "Types A, B and M are classified as 'Poor' settlements")+
+  map_theme()
+
+
+sf::st_geometry(settlement_type_asaba) <- NULL 
+
+asaba_settlement_types <- settlement_type_asaba %>% 
+  mutate(number = ifelse(is.na(number), 0,  number)) %>% 
+  pivot_wider(names_from = settle_type, values_from = number)
+
+plotting_asaba <- asaba_shp %>% 
+  inner_join(settlement_type_asaba) %>% 
+  group_by(WardName) %>% 
+  mutate(total_settlement = sum(number),
+         proportion_settlement_type = number / total_settlement) %>% 
+  ungroup() %>% 
+  mutate(class_stmnt_number = cut(number, c(0,2,4,6,8,10,15,20,30,50, 78), include.lowest = T),
+         class_stmnt_proportion = cut(proportion_settlement_type, seq(0,1,0.2)))
+
+plotting_v2_asaba = plotting_asaba %>% 
+  mutate(grp = ifelse(settle_type == "A" | settle_type == "B" | settle_type == "M", "Poor", "Good")) %>%
+  group_by(WardName, grp, total_settlement) %>% 
+  summarise(grp_number = sum(number)) %>% 
+  mutate(proportion_settlement_type_grp = grp_number / total_settlement,
+         grp_proportion = cut(proportion_settlement_type_grp, seq(0, 1, 0.2), include.lowest = T))
+
+plotting_00_asaba <- plotting_v2_asaba %>% 
+  filter(grp == "Poor") %>% 
+  select(WardName, settlement_type = proportion_settlement_type_grp) %>% 
+  st_drop_geometry()
+
+
+asaba_variables <- left_join(asaba_variables, plotting_00_asaba, by = "WardName")
+
+ggplot()+
+  geom_sf(data = asaba_variables, aes(geometry = geometry, fill = settlement_type))+
+  scale_fill_continuous(low = "lightyellow", high = "brown", na.value = "grey")+
+  labs(title = "Settlement Type in Asaba",
+       caption = "Proportion of settlements that are classified as 'Poor'")+
+  map_theme()
+
+
+
+
 
