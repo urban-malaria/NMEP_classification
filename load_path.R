@@ -12,12 +12,12 @@ DataDir <- file.path(DriveDir, "data")
 ShpfilesDir <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles")
 RastersDir <- file.path(DriveDir, "data/nigeria/Raster_files")
 GriddedWardsDir <- file.path(ShpfilesDir, "gridded")
-FootprintsDir <- file.path(DataDir, "nigeria/building_footprints/OpenBuildings")
 
+FootprintsDir <- file.path(DataDir, "nigeria/building_footprints/OpenBuildings")
+MSGlobalDir <- file.path(DataDir, "nigeria/building_footprints/MSGlobal")
 
 OutputsDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App")
 plotsDir <- file.path(OutputsDir, "Plots")
-
 
 
 #load packages
@@ -29,7 +29,7 @@ list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
                       "dplyr", "ggpubr", "viridis", "patchwork", 
                       "raster", "wordcloud", "ggwordcloud", "terra", "plotly",
                       "gridExtra", "grid", "openxlsx", "officer", "magrittr", "mclust",
-                      "foot", "units", "tidyr", "foreach", "doParallel")
+                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply")
 
 read_install_pacakges <- function(packages = list_of_packages
 ){
