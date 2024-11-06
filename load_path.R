@@ -25,11 +25,10 @@ plotsDir <- file.path(OutputsDir, "Plots")
 list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
                       "ggplot2", "labelled", "tidyverse", "janitor", "terra",
                       "readxl", "mapsf", "survey","srvyr", "plotly", "hdf5r",
-                      "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", 
-                      "dplyr", "ggpubr", "viridis", "patchwork", 
+                      "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", "ggpubr", "viridis", "patchwork", 
                       "raster", "wordcloud", "ggwordcloud", "terra", "plotly",
                       "gridExtra", "grid", "openxlsx", "officer", "magrittr", "mclust",
-                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply")
+                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply", "dplyr")
 
 read_install_pacakges <- function(packages = list_of_packages
 ){
