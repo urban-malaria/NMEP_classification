@@ -10,8 +10,10 @@ DriveDir <- file.path(Drive, "Urban Malaria Proj Dropbox", "urban_malaria")
 DataDir <- file.path(DriveDir, "data")
 
 ShpfilesDir <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles")
-RastersDir <- file.path(DriveDir, "data/nigeria/Raster_files")
 GriddedWardsDir <- file.path(ShpfilesDir, "gridded")
+RastersDir <- file.path(DriveDir, "data/nigeria/Raster_files")
+TPRDir <- file.path(DriveDir, "data", "nigeria", "TPR")
+PfDir <- file.path(RastersDir, "Malaria Atlas")
 
 FootprintsDir <- file.path(DataDir, "nigeria/building_footprints/OpenBuildings")
 MSGlobalDir <- file.path(DataDir, "nigeria/building_footprints/MSGlobal")
@@ -19,8 +21,11 @@ MSGlobalDir <- file.path(DataDir, "nigeria/building_footprints/MSGlobal")
 OutputsDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App")
 plotsDir <- file.path(OutputsDir, "Plots")
 
+FieldDataDir <- file.path(DataDir, "nigeria/kano_ibadan_epi/new_field_data")
+
 
 #load packages
+
 
 list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
                       "ggplot2", "labelled", "tidyverse", "janitor", "terra",
@@ -28,7 +33,8 @@ list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
                       "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", "ggpubr", "viridis", "patchwork", 
                       "raster", "wordcloud", "ggwordcloud", "terra", "plotly",
                       "gridExtra", "grid", "openxlsx", "officer", "magrittr", "mclust",
-                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply", "dplyr")
+                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply", "dplyr",
+                      "stringr", "purrr", "stars")
 
 read_install_pacakges <- function(packages = list_of_packages
 ){

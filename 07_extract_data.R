@@ -1,44 +1,25 @@
 ##Extract environmental variables for Warri and Asaba
+
 rm(list = ls())
 
-library(raster)
-library(sf)
-library(terra)
-library(stringr)
-library(ggplot2)
-library(dplyr)
-library(purrr)
-library(haven)
-library(stars)
-library(gridExtra)
-library(tidyr)
-
-
-#Load directories
-Drive <- file.path(gsub("[\\]", "/", gsub("Documents", "", gsub("OneDrive", "", Sys.getenv("HOME")))))
-Drive <- file.path(gsub("[//]", "/", Drive))
-DriveDir <- file.path(Drive, "Urban Malaria Proj Dropbox", "urban_malaria")
-RasterDir <- file.path(DriveDir, "data", "nigeria", "Raster_files")
-TPRDir <- file.path(DriveDir, "data", "nigeria", "TPR")
-PfDir <- file.path(RasterDir, "Malaria Atlas")
-ShpDir <- file.path(DriveDir, "data", "nigeria", "shapefiles", "ShinyApp_shapefiles")
-
+source("~/NMEP_classification/load_path.R", echo = T)
 
 ## Load shapefiles
-warri_shp <- st_read(file.path(ShpDir, "Warri", "Warri.shp"))
-asaba_shp <- st_read(file.path(ShpDir, "Asaba", "Asaba.shp"))
+warri_shp <- st_read(file.path(ShpfilesDir, "Warri", "Warri.shp"))
+asaba_shp <- st_read(file.path(ShpfilesDir, "Asaba", "Asaba.shp"))
 
 
 # Rainfall
-rainfall_rasters <-file.path(RasterDir, "monthly rainfall 2023-24")
+rainfall_rasters <-file.path(RastersDir, "monthly rainfall 2023-24")
 
-
-#Extract rainfall for warri
 rainfall <- list.files(file.path(rainfall_rasters), 
                        pattern = ".tif", full.names = TRUE)
 
 rainfall_data <- lapply(seq_along(rainfall), 
                        function(x) raster::raster(rainfall[[x]]))
+
+
+#Extract rainfall for warri
 
 warri_rainfall <- rainfall_data %>%
   purrr::map(~raster::extract(., warri_shp, fun = mean, df = TRUE)) %>% 
@@ -61,7 +42,7 @@ asaba_shp$mean_rainfall <- asaba_rainfall$avgRAIN
 
 ##EVI
 
-evi_rasters <-file.path(RasterDir, "Updated_Covariates", "2023-24_EVI_MOD13A1")
+evi_rasters <-file.path(RastersDir, "Updated_Covariates", "2023-24_EVI_MOD13A1")
 
 evi <- list.files(file.path(evi_rasters), 
                        pattern = ".tif", full.names = TRUE)
@@ -87,7 +68,7 @@ asaba_shp$mean_EVI <- asaba_evi$avgEVI
 
 ##NDVI
 
-ndvi_rasters <-file.path(RasterDir, "Updated_Covariates", "2023-24_NDVI_MOD13A1")
+ndvi_rasters <-file.path(RastersDir, "Updated_Covariates", "2023-24_NDVI_MOD13A1")
 
 ndvi <- list.files(file.path(ndvi_rasters), 
                   pattern = ".tif", full.names = TRUE)
@@ -113,7 +94,7 @@ asaba_shp$mean_NDVI <- asaba_ndvi$avg_ndvi
 
 ### Relative humidity
 
-relative_humidity <- raster(file.path(RasterDir, "relative_humidity_2024.grib"))
+relative_humidity <- raster(file.path(RastersDir, "relative_humidity_2024.grib"))
 
 warri_rh <- extract(relative_humidity, warri_shp, fun = mean, df = TRUE)
 colnames(warri_rh)[2] <- "relative_humidity"
@@ -126,7 +107,7 @@ asaba_shp$relative_humidity <- asaba_rh$relative_humidity
 
 
 #### temperature
-temperature <- raster(file.path(RasterDir, "temperature_2024.grib"))
+temperature <- raster(file.path(RastersDir, "temperature_2024.grib"))
 
 warri_temp <- extract(temperature, warri_shp, fun = mean, df = TRUE)
 colnames(warri_temp)[2] <- "temperature"
@@ -140,7 +121,7 @@ asaba_shp$temp <- asaba_temp$temperature
 
 ### distance to h2o bodies
 
-h2o_distance <- raster(file.path(RasterDir, "distance_to_water_bodies", "distance_to_water.tif"))
+h2o_distance <- raster(file.path(RastersDir, "distance_to_water_bodies", "distance_to_water.tif"))
 
 warri_distance <- extract(h2o_distance, warri_shp, fun = mean, df = TRUE)
 warri_shp$distance_to_water <- warri_distance$distance_to_water
@@ -158,7 +139,7 @@ warri_variables <- warri_shp %>%
 
 saveRDS(warri_variables, "warri_var.RDS")
 
-write.csv(warri_variables, file.path(ShpDir, "warri_variables.csv"))
+write.csv(warri_variables, file.path(ShpfilesDir, "warri_variables.csv"))
 
 
 asaba_variables <- asaba_shp %>%
@@ -168,7 +149,7 @@ asaba_variables <- asaba_shp %>%
 
 saveRDS(asaba_variables, "asaba_var.RDS")
 
-write.csv(asaba_variables, file.path(ShpDir, "asaba_variables.csv"))
+write.csv(asaba_variables, file.path(ShpfilesDir, "asaba_variables.csv"))
 
 
 #read summarized variables
@@ -178,8 +159,8 @@ asaba_variables <- readRDS(file.path("~/asaba_var.RDS"))
 
 ### Relative humidity 2
 
-list_RH <- list(rh_2023 <- brick(file.path(RasterDir, "relative_humidity_2023.grib")),
-                rh_2024 <- brick(file.path(RasterDir, "relative_humidity_2024.grib"))
+list_RH <- list(rh_2023 <- brick(file.path(RastersDir, "relative_humidity_2023.grib")),
+                rh_2024 <- brick(file.path(RastersDir, "relative_humidity_2024.grib"))
 )
 
 names(list_RH) <- c("2023", "2024")
@@ -236,8 +217,8 @@ asaba_variables$RH_mean <- rh_asaba$RH_mean
 
 #Temperature 2
 
-list_temp <- list(temp_2023 <- brick(file.path(RasterDir, "temperature_2023.grib")),
-                temp_2024 <- brick(file.path(RasterDir, "temperature_2024.grib"))
+list_temp <- list(temp_2023 <- brick(file.path(RastersDir, "temperature_2023.grib")),
+                temp_2024 <- brick(file.path(RastersDir, "temperature_2024.grib"))
 )
 
 names(list_temp) <- c("2023", "2024")
@@ -436,12 +417,12 @@ grid.arrange(asaba_evi, asaba_ndvi, asaba_rain, asaba_humidity, asaba_h2o, asaba
 
 warri_variables2 <- warri_variables %>% 
   st_drop_geometry()
-write.csv(warri_variables2, file.path(ShpDir, "warri_variables.csv"))
+write.csv(warri_variables2, file.path(ShpfilesDir, "warri_variables.csv"))
 
 
 asaba_variables2 <- asaba_variables %>% 
   st_drop_geometry()
-write.csv(asaba_variables2, file.path(ShpDir, "asaba_variables.csv"))
+write.csv(asaba_variables2, file.path(ShpfilesDir, "asaba_variables.csv"))
 
 
 # Extract pf parasite rate
@@ -474,7 +455,7 @@ asaba_variables <- left_join(
 
 
 #housing quality
-housing_quality <- raster(file.path(RasterDir, "housing",
+housing_quality <- raster(file.path(RastersDir, "housing",
                               "2019_Nature_Africa_Housing_2015_NGA.tiff"))
 
 warri_housing<- extract(housing_quality, warri_shp, fun = mean, df = TRUE)
@@ -488,12 +469,12 @@ asaba_variables$housing_quality <- asaba_housing$X2019_Nature_Africa_Housing_201
 ##################Settlement Type Analysis######################################
 ################################################################################
 
-#settlment_type <- raster(file.path(RasterDir, "nigeria_settlements_Worldpop",
+#settlment_type <- raster(file.path(RastersDir, "nigeria_settlements_Worldpop",
                                    "NGA_settlement_sample.tif"))
 #warri_settlement<- extract(settlment_type, warri_shp, fun = mean, df = TRUE)
 
 
-settlement_blocks <- st_read(file.path(RasterDir, "nigeria_settlement_classification", "blocks_V1.1",
+settlement_blocks <- st_read(file.path(RastersDir, "nigeria_settlement_classification", "blocks_V1.1",
                                        "Nigeria_Blocks_V1.shp")) %>% 
   filter(state == 'Delta', landuse =='Residential')
 
