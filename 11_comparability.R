@@ -34,9 +34,12 @@ ibadan_data_clean <- ibadan_data %>%
          net_own = ifelse(net_ownership == 1, 1, 0),
          malaria_positive = ifelse(q302 == 1, 1, 0)) %>% #convert all to 0 and 1
   mutate(net_use2 = case_when(
-  net_own == 1 & net_use == 0 ~ 0,  
-  net_own == 0 & net_use == 0 ~ NA_real_, TRUE ~ net_use  ))
- 
+    net_own == 0 ~ NA_real_, net_own == 1 ~ net_use))
+  
+  # mutate(net_use2 = case_when(
+  # net_own == 1 & net_use == 0 ~ 0,  
+  # net_own == 0 & net_use == 0 ~ NA_real_, TRUE ~ net_use  ))
+  # 
 
 #descriptive plots
 
@@ -102,7 +105,7 @@ household_tpr <- ibadan_data_clean %>%
 
 ###########net ownership and net access
 
-net_data <- ibadan_data_clean %>%
+net_data_kn <- ibadan_data_clean %>%
   filter(!is.na(net_ownership)) %>%  
   filter(net_ownership != 3) %>%  
   group_by(Ward) %>% #group by household? settlement_type_new
@@ -161,7 +164,7 @@ household_net_data <- ibadan_data_clean %>%
          overall_net_use_proportion = use_nets/total) 
 
 
-###weighted calculations
+###weighted calculations and Ibadan summary
 design <- svydesign(
   id = ~sn + ea,
   strata = ~Ward + settlement_type,
@@ -180,6 +183,16 @@ weighted_ward_net_use_overall <- svyby(~net_use, ~Ward, design,
 
 weighted_ward_net_use2 <- svyby(~net_use2, ~Ward, design, svymean, na.rm = T)
 
+ibadan_list <- data.frame(Ward = c("AGUGU", "BASHORUN", "CHALLENGE", "OLOGUNERU"))
+all_ib <- list(ibadan_list, weighted_ward_tpr, weighted_ward_net_own, weighted_ward_net_use2)
+ibadan_summary <- reduce(all_ib, left_join, by = "Ward")
+ibadan_summary <- ibadan_summary %>%
+  mutate(Ward = str_to_title(Ward),
+         Ward = ifelse(Ward == "Ologuneru", "Olopomewa", Ward)) 
+
+write.csv(ibadan_summary, file.path(OutputsDir, "NMEP Malaria Risk Scores", "ibadan_field_variables.csv"))
+
+  
 
 ################################################################################
 ########################### REGRESSIONS ########################################
