@@ -10,6 +10,8 @@ DriveDir <- file.path(Drive, "Urban Malaria Proj Dropbox", "urban_malaria")
 DataDir <- file.path(DriveDir, "data")
 
 ShpfilesDir <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles")
+ShpfilesDir2 <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/NMEP Net Distribution States Shapefiles for ADM3 - 13 States")
+
 GriddedWardsDir <- file.path(ShpfilesDir, "gridded")
 RastersDir <- file.path(DriveDir, "data/nigeria/Raster_files")
 TPRDir <- file.path(DriveDir, "data", "nigeria", "TPR")
