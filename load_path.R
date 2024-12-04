@@ -75,6 +75,44 @@ theme_manuscript <- function(){
 }
 
 
+get_model_results <- function(data) {
+  #survey design
+  design <- svydesign(
+    id = ~sn + ea,
+    strata = ~Ward + settlement_type,
+    weights = ~ind_weight,
+    data = data,
+    nest = TRUE
+  )
+  #adjusted
+  adjusted_model <- svyglm(malaria_positive ~ net_own + net_use3, family = "binomial", design = design)
+  adjusted_results <- broom::tidy(adjusted_model) %>%
+    mutate(
+      oddsratio = round(exp(estimate), 3),
+      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
+      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
+      model = "adjusted"
+    )
+  #unadjusted: net_own only
+  unadjusted_net_own <- svyglm(malaria_positive ~ net_own, family = "binomial", design = design)
+  unadjusted_net_own_results <- broom::tidy(unadjusted_net_own) %>%
+    mutate(
+      oddsratio = round(exp(estimate), 3),
+      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
+      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
+      model = "unadjusted"
+    )
+  # unadjusted: net_use only
+  unadjusted_net_use <- svyglm(malaria_positive ~ net_use3, family = "binomial", design = design)
+  unadjusted_net_use_results <- broom::tidy(unadjusted_net_use) %>%
+    mutate(
+      oddsratio = round(exp(estimate), 3),
+      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
+      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
+      model = "unadjusted"
+    )
+  bind_rows(adjusted_results, unadjusted_net_own_results, unadjusted_net_use_results)
+}
 
 
 

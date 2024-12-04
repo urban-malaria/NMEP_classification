@@ -7,20 +7,8 @@ KanoFieldData <- file.path(FieldDataDir, "241106_Kano_latest_data")
 ####################################################################################
 ## Manipulate column did you sleep under nets
 
-#dhsDir <- file.path(DriveDir, "data")
-
 kano_data <- read_dta(file.path(FieldDataDir, "Kano Wet Season Data Sept. 2024",
                                 "long_wetseason_household_membersV2_678_cols.dta"))
-
-#all_data <- haven::read_dta(file.path(dhsDir,"nigeria/kano_ibadan_epi/new_field_data/240922_Ibadan_latest_data/ibadan_long_wetseason_household_members.dta"))
-#ib_household_net_insp <- read_dta(file.path(FieldDataDir, "240922_Ibadan_latest_data", "IB Wet season hhold net inspection.dta" ))
-
-# household_kano <- read_dta(file.path(KanoFieldData, "KN Wet season household data_edited_061124.dta" ))
-# household_kano2 <- read_dta(file.path(KanoFieldData, "KN wet season hhold  RDT results_061124.dta" ))
-# 
-# KanoFieldData2 <- file.path(FieldDataDir, "240930_Kano_latest_data")
-# test_kano2 <- read_dta(file.path(KanoFieldData2, "KN Wet season household data_edited_290924.dta"))
-# test_kano3 <- read_dta(file.path(KanoFieldData2, "Kano_rdt_with_weights.dta")) #KN wet season hhold  RDT results_290924.dta
 
 
 kn_household_data <- read_dta(file.path(FieldDataDir, "Kano Wet Season Data Sept. 2024",
@@ -74,16 +62,17 @@ kano_data_full <- read_dta(file.path(KanoFieldData, "kano_long_wetseason_househo
 kano_data_clean <- kano_data_full %>% 
   dplyr::select(sn, hl1, hl4, hl5, hl6, #identifiers
                 q302, #test result
-                Wardn, settle_type, enumeration_area, 
+                Wardn, #settle_type, 
+                settlement1, enumeration_area, 
                 ward_weight, ea_settlement_weight, overall_hh_weight, ind_weights_hh,  #weights
                 nh101a, nh105, slept_under_net #net ownership/ use
   ) %>%
-  filter(!is.na(settle_type)) %>%  
+  filter(!is.na(settlement1)) %>%  
   filter(!Wardn == "") %>%  
   filter(!is.na(q302)) %>%  #remove non-tested individuals, included this line after running surveyed population
   mutate(unique_id = paste(sn, hl1, sep = "_")) %>% 
   rename(Ward = Wardn,
-         settlement_type = settle_type,
+         settlement_type = settlement1,
          ea = enumeration_area, 
          ea_weight = ea_settlement_weight,
          hh_weight = overall_hh_weight,
@@ -95,9 +84,11 @@ kano_data_clean <- kano_data_full %>%
          net_own = ifelse(net_ownership == 1, 1, 0),
          malaria_positive = ifelse(q302 == 1, 1, 0)) %>% #convert all to 0 and 1
   mutate(net_use2 = case_when(
-    net_own == 0 ~ NA_real_, net_own == 1 ~ net_use))
-
-
+    net_own == 0 ~ NA_real_, net_own == 1 ~ net_use)) %>% 
+  mutate(net_use3 = case_when(
+    net_own == 0 & net_use == 1 ~ NA_real_,
+    net_own == 0 & net_use == 0 ~ 0,
+    net_own == 1 ~ net_use))  ##net use cleaned for model
 
 
 #Surveyed Population
@@ -167,7 +158,7 @@ ggplot(net_data_long_kn, aes(x = Ward, y = count, fill = metric)) +
   theme_manuscript()
 
 
-##weighted values
+##################Get weighted values for each ward ##################################
 
 design <- svydesign(
   id = ~sn + ea,
@@ -186,12 +177,12 @@ weighted_ward_net_own_kn <- svyby(~net_own, ~Ward, design,
                                svymean, na.rm = T)
 
 #net use in people that own nets
-weighted_ward_net_use2_kn <- svyby(~net_use2, ~Ward, design, svymean, na.rm = T) #net use in people that own nets
+weighted_ward_net_use3_kn <- svyby(~net_use3, ~Ward, design, svymean, na.rm = T) #net use in people that own nets
 
 
 #combine
 kano_list <- data.frame(Ward = c("Dorayi", "Fagge", "Giginyu", "Gobirawa", "Zango"))
-all_kn <- list(kano_list, weighted_ward_tpr_kn, weighted_ward_net_own_kn, weighted_ward_net_use2_kn)
+all_kn <- list(kano_list, weighted_ward_tpr_kn, weighted_ward_net_own_kn, weighted_ward_net_use3_kn)
 kano_summary <- reduce(all_kn, left_join, by = "Ward")
 kano_summary <- kano_summary %>% 
   mutate(Ward = ifelse(Ward == "Fagge", "Fagge D2", Ward))
@@ -199,6 +190,78 @@ kano_summary <- kano_summary %>%
 write.csv(kano_summary, file.path(OutputsDir, "NMEP Malaria Risk Scores", "kano_field_variables.csv"))
 
 
-###################### NORMALIZATION AND COMPOSITE SCORES #####################
+############################REGRESSIONS##########################################
+
+###### WEIGHTED ODDS########
+
+kano_individuals <- get_model_results(kano_data_clean)
+
+kano_individuals <- kano_individuals %>% 
+  filter(term != "(Intercept)")
+
+ggplot(kano_individuals, aes(x = oddsratio, y = term, colour = model)) +
+  geom_vline(aes(xintercept = 1), size = .25, linetype = "dashed") +
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = .5, height =.2, position = position_dodge(width = 0.5)) +
+  geom_point(size = 2, alpha = 0.5, position = position_dodge(width = 0.5)) +
+  #facet_wrap(~model)+ 
+  labs(x = "Odds Ratio",
+       y = "Predictors",
+       title = "Net Use and Net Ownership on Positive Malaria Test in Kano",
+       colour = "Model")+
+  theme_manuscript()
+
+#by ward
+
+ward_data_kn <- kano_data_clean %>% group_split(Ward)
+names(ward_data_kn) <- c("Dorayi", "Fagge", "Giginyu", "Gobirawa", "Zango")  
+
+ward_results_kn <- ward_data_kn %>%
+  map_df(~ get_model_results(.x), .id = "Ward")
 
 
+ggplot(ward_results_kn %>% 
+         filter(term != "(Intercept)"), 
+       aes(x = oddsratio, y = Ward, colour = term))+
+  geom_point(size = 2, position = position_dodge(width = 0.5))+
+  geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed")+
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5))+
+  facet_grid(~model, scales = "free")+
+  labs(title = "Net Ownership and Net Use on Positive Malaria Test in Kano Wards",
+       x = "Odds Ratio",
+       y = "Ward",
+       color = "Type") +
+  theme_manuscript()
+
+#by settlement type
+
+settle_data_kn <- kano_data_clean %>% group_split(settlement_type)
+names(settle_data_kn) <- c("Formal", "Informal", "Slum")  
+
+settle_results_kn <- settle_data_kn %>%
+  map_df(~ get_model_results(.x), .id = "settlement_type")
+
+
+ggplot(settle_results_kn %>% 
+         filter(term != "(Intercept)"), 
+       aes(x = oddsratio, y = settlement_type, colour = term))+
+  geom_point(size = 2, position = position_dodge(width = 0.5))+
+  geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed")+
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5))+
+  facet_grid(~model, scales = "free")+
+  labs(title = "Net Ownership and Net Use on Positive Malaria Test in Kano Settlements",
+       x = "Odds Ratio",
+       y = "Settlement Type",
+       color = "Type") +
+  theme_manuscript()
+
+#### combine Kano and Ibadan shapefiles
+ibadan_shp <- st_read(file.path(ShpfilesDir, "IB_4_Wards", "Ibadan_4.shp"))
+kano_shp <- st_read(file.path(ShpfilesDir, "KN_5_Wards", "Kano_5.shp"))
+
+combined_shp <- rbind(ibadan_shp, kano_shp)
+ggplot()+
+  geom_sf(data = combined_shp, aes(geometry = geometry))+
+  #coord_equal()+
+  map_theme()
+
+st_write(combined_shp, file.path(ShpfilesDir, "Kano_Ibadan", "Kano-Ibadan.shp", append = T))

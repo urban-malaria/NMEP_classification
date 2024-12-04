@@ -34,8 +34,12 @@ ibadan_data_clean <- ibadan_data %>%
          net_own = ifelse(net_ownership == 1, 1, 0),
          malaria_positive = ifelse(q302 == 1, 1, 0)) %>% #convert all to 0 and 1
   mutate(net_use2 = case_when(
-    net_own == 0 ~ NA_real_, net_own == 1 ~ net_use))
-  
+    net_own == 0 ~ NA_real_, net_own == 1 ~ net_use)) %>%  #net use in those with nets
+  mutate(net_use3 = case_when(
+    net_own == 0 & net_use == 1 ~ NA_real_,
+    net_own == 0 & net_use == 0 ~ 0,
+    net_own == 1 ~ net_use))  ##net use cleaned for model
+
   # mutate(net_use2 = case_when(
   # net_own == 1 & net_use == 0 ~ 0,  
   # net_own == 0 & net_use == 0 ~ NA_real_, TRUE ~ net_use  ))
@@ -181,10 +185,10 @@ weighted_ward_net_own <- svyby(~net_own, ~Ward, design,
 weighted_ward_net_use_overall <- svyby(~net_use, ~Ward, design,
                      svymean, na.rm = T)
 
-weighted_ward_net_use2 <- svyby(~net_use2, ~Ward, design, svymean, na.rm = T)
+weighted_ward_net_use3 <- svyby(~net_use3, ~Ward, design, svymean, na.rm = T)
 
 ibadan_list <- data.frame(Ward = c("AGUGU", "BASHORUN", "CHALLENGE", "OLOGUNERU"))
-all_ib <- list(ibadan_list, weighted_ward_tpr, weighted_ward_net_own, weighted_ward_net_use2)
+all_ib <- list(ibadan_list, weighted_ward_tpr, weighted_ward_net_own, weighted_ward_net_use3)
 ibadan_summary <- reduce(all_ib, left_join, by = "Ward")
 ibadan_summary <- ibadan_summary %>%
   mutate(Ward = str_to_title(Ward),
@@ -311,11 +315,11 @@ model03 <- glm(malaria_positivity)
 ####################################################################################
 # Association Analysis:  Odds Ratio
 
-malaria_reg <- ibadan_data_clean %>% 
-  dplyr::select(net_use, net_own, net_use2, malaria_positive, ind_weight)
+# malaria_reg <- ibadan_data_clean %>% 
+#   dplyr::select(net_use, net_own, net_use2, malaria_positive, ind_weight)
 
 
-model04 <- glm(malaria_positive ~ net_own + net_use, 
+model04 <- glm(malaria_positive ~ net_own + net_use3, 
                family = binomial(link = "logit"), data = ibadan_data_clean, weights = ind_weight)
 
 summary(model04)
@@ -340,7 +344,7 @@ model05_results <- broom::tidy(model05) %>%
 print(model05)
 
 
-model06 <- glm(malaria_positive ~ net_use, 
+model06 <- glm(malaria_positive ~ net_use3, 
                family = binomial(link = "logit"), data = ibadan_data_clean, weights = ind_weight)
 summary(model06)
 
@@ -355,7 +359,7 @@ model06_results <- broom::tidy(model06) %>%
 ##with svyglm()
 
 malaria_reg2<- ibadan_data_clean %>% 
-  dplyr::select(net_use, net_own, net_use2, malaria_positive, ind_weight, Ward, 
+  dplyr::select(net_use, net_own, net_use2, net_use3, malaria_positive, ind_weight, Ward, 
                 settlement_type, sn, ea, hh_weight)
 
 
@@ -367,7 +371,7 @@ indvidual_design <- svydesign(
   nest = T
 )
 
-model07 <- svyglm(malaria_positive ~ net_own + net_use,
+model07 <- svyglm(malaria_positive ~ net_own + net_use3,
                   family = "binomial", design = indvidual_design)
 
 model07_results <- broom::tidy(model07) %>% 
@@ -387,7 +391,7 @@ model08_results <- broom::tidy(model08) %>%
          model = "unadjusted",
          method = "svyglm")
 
-model09 <- svyglm(malaria_positive ~ net_use,
+model09 <- svyglm(malaria_positive ~ net_use3,
                   family = "binomial", design = indvidual_design)
 
 model09_results <- broom::tidy(model09) %>% 
@@ -401,58 +405,20 @@ model09_results <- broom::tidy(model09) %>%
 all <- rbind(model04_results, model05_results, model06_results, model07_results, model08_results,
              model09_results)
 
-ggplot(all, aes(x = oddsratio, y = term, colour = method)) +
+ggplot(all %>% 
+         filter(term != "(Intercept)"), aes(x = oddsratio, y = term, colour = method)) +
   geom_vline(aes(xintercept = 1), size = .25, linetype = "dashed") +
-  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = .5, height =.2) +
-  geom_point(size = 3.5, alpha = 0.5) +
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = .5, height =.2, na.rm = T, position = position_dodge(width = 0.5)) +
+  geom_point(size = 2, alpha = 1, na.rm = T, position = position_dodge(width = 0.5)) +
   facet_wrap(~model)+ 
-  labs(x = "Odds Ratio",
+  labs(x = "Odds Ratio", 
        y = "Predictors",
-       title = "Odds Ratio of Net Use and Net Ownership on Positive Malaria Test",
+       title = "Odds Ratio of Net Ownership and Net Use on Positive Malaria Test in Ibadan",
        colour = "Method")+
   theme_manuscript()
 
-#Function to fit models for each ward with svglm
 
-get_model_results <- function(data) {
-  #survey design
-  design <- svydesign(
-    id = ~sn + ea,
-    strata = ~Ward + settlement_type,
-    weights = ~ind_weight,
-    data = data,
-    nest = TRUE
-  )
-  #adjusted
-  adjusted_model <- svyglm(malaria_positive ~ net_own + net_use, family = "binomial", design = design)
-  adjusted_results <- broom::tidy(adjusted_model) %>%
-    mutate(
-      oddsratio = round(exp(estimate), 3),
-      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
-      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
-      model = "adjusted"
-    )
-  #unadjusted: net_own only
-  unadjusted_net_own <- svyglm(malaria_positive ~ net_own, family = "binomial", design = design)
-  unadjusted_net_own_results <- broom::tidy(unadjusted_net_own) %>%
-    mutate(
-      oddsratio = round(exp(estimate), 3),
-      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
-      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
-      model = "unadjusted"
-    )
-   # unadjusted: net_use only
-  unadjusted_net_use <- svyglm(malaria_positive ~ net_use, family = "binomial", design = design)
-  unadjusted_net_use_results <- broom::tidy(unadjusted_net_use) %>%
-    mutate(
-      oddsratio = round(exp(estimate), 3),
-      ci_low = round(exp(estimate - (1.96 * std.error)), 3),
-      ci_high = round(exp(estimate + (1.96 * std.error)), 3),
-      model = "unadjusted"
-    )
-  bind_rows(adjusted_results, unadjusted_net_own_results, unadjusted_net_use_results)
-}
-
+################
 #odds ratio by ward
 ward_data <- ibadan_data_clean %>% group_split(Ward)
 names(ward_data) <- c("Agugu", "Bashorun", "Challenge", "Olopomewa")  
@@ -463,8 +429,8 @@ ward_results <- ward_data %>%
 
 ggplot(ward_results, aes(x = oddsratio, y = term, color = model)) +
   geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed") +
-  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2) +
-  geom_point(size = 3.5) +
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5)) +
+  geom_point(size = 2, position = position_dodge(width = 0.5)) +
   facet_wrap(~Ward, scales = "free") + 
   labs(title = "Odds Ratios for Net Ownership and Net Use by Ward",
        x = "Odds Ratio",
@@ -476,11 +442,11 @@ ggplot(ward_results, aes(x = oddsratio, y = term, color = model)) +
 ggplot(ward_results %>% 
          filter(term != "(Intercept)"), 
        aes(x = oddsratio, y = Ward, colour = term))+
-  geom_point(size = 3.5)+
+  geom_point(size = 2, position = position_dodge(width = 0.5))+
   geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed")+
-  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2)+
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5))+
   facet_grid(~model, scales = "free")+
-  labs(title = "Odds Ratios for Net Ownership and Net Use by Ward",
+  labs(title = "Net Ownership and Net Use on Positive Malaria Test in Ibadan Wards",
        x = "Odds Ratio",
        y = "Ward",
        color = "Type") +
@@ -498,8 +464,8 @@ settlement_results <- settlement_data %>%
 
 ggplot(settlement_results, aes(x = oddsratio, y = term, color = model)) +
   geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed") +
-  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2) +
-  geom_point(size = 3.5) +
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5)) +
+  geom_point(size = 2, position = position_dodge(width = 0.5)) +
   facet_wrap(~settlement_type, scales = "free") + 
   labs(title = "Odds Ratios for Net Ownership and Net Use by Settlement Type",
        x = "Odds Ratio",
@@ -511,11 +477,11 @@ ggplot(settlement_results, aes(x = oddsratio, y = term, color = model)) +
 ggplot(settlement_results %>% 
          filter(term != "(Intercept)"), 
        aes(x = oddsratio, y = settlement_type, colour = term))+
-  geom_point(size = 3.5)+
+  geom_point(size = 2, position = position_dodge(width = 0.5))+
   geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed")+
-  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2)+
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5))+
   facet_grid(~model, scales = "free")+
-  labs(title = "Odds Ratios for Net Ownership and Net Use by Settlement Type",
+  labs(title = "Net Ownership and Net Use on Positive Malaria Test in Ibadan Settlements",
        x = "Odds Ratio",
        y = "Settlement Type",
        color = "Type") +

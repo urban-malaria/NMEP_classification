@@ -1,4 +1,5 @@
 ### Explore new HMIS data
+rm(list=ls())
 
 source("~/NMEP_classification/load_path.R", echo = T)
 
@@ -46,7 +47,6 @@ hims_delta_clean <- hims_delta %>%
   HF = str_replace_all(HF, "de", ""))
 
 hims_delta_clean$Ward <- str_trim(hims_delta_clean$Ward)
-
 
 hims_delta_clean <- hims_delta_clean %>% 
   mutate(tested_u5 = (rdt_u5 + micro_u5),
@@ -121,20 +121,22 @@ hims_delta_clean <- hims_delta_clean %>%
     Ward == "Agbarha" ~ "Agbarha-Otor",
     Ward == "Agbarho2" ~ "Agbarho 2",
     Ward == "Otor-Ogo" ~ "Otor-Ogor",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
-    # Ward == "Old" ~ "New",
+    Ward == "Olumo 1" ~ "Olomu 1",
+    Ward == "Olumo 2" ~ "Olomu 2",
+    Ward == "Olumo 3" ~ "Olomu 3-Effurun-Otor",
+    Ward == "Ogbe Obiaruku" ~ "Ogbeobiaruku",
+    Ward == "Okuzu" ~ "Okuzu/Obiaruku  II",
+    Ward == "Ugboreke" ~ "Ugboroke",
+    Ward == "Urhumarho" ~ "Urhumarhu",
     Ward == "Abigborode" ~ "Abigborodo",
+    Ward == "Itsekelewu" ~ "Tsekelewu",
+    Ward == "Ogbudugbudu" ~ "Okbudugbudu",
+    Ward == "Okere ward" ~ "Okere",
+    Ward == "Ogidingbe" ~ "Ogidigben",
+    Ward == "Okererenkoko" ~ "Okerenkoko",
     Ward == "Abraka" ~ "Abraka I",
     Ward == "Afiesere" ~ "Afiesere/Ereumukohwaren",
+    # Ward == "Old" ~ "New",
     TRUE ~ Ward
   ))
 
@@ -163,28 +165,18 @@ facilities2 <- hims_delta_clean %>%
 
 delta_shp <- st_read(file.path(ShpfilesDir, "Delta", "Delta_wards.shp"))
 
-# ##trim names
-# delta_shp <- delta_shp %>%
-#   mutate(WardName = str_trim(WardName))
-# 
-# facilities2 <- facilities2 %>%
-#   mutate(Ward = str_trim(Ward))
 
 delta_ward_facilities <- left_join(delta_shp, facilities2, by = c("WardName" = "Ward"))
 
 
+na_wards_count <- delta_ward_facilities %>%
+  filter(is.na(facility_count)) %>%
+  summarise(na_count = n())
+print(na_wards_count) #47 wards
 
-# na_wards_count <- delta_ward_facilities %>%
-#   filter(is.na(facility_count)) %>%
-#   summarise(na_count = n())
-# 
-#  print(na_wards_count)
-# 
-# na_wards <- delta_ward_facilities %>%
-#   filter(is.na(facility_count)) %>%
-#   dplyr::select(WardName)
-# 
-# print(na_wards)
+na_wards <- delta_ward_facilities %>%
+  filter(is.na(facility_count)) %>%
+  dplyr::select(WardName)
 
 
 ggplot()+
@@ -197,33 +189,61 @@ ggplot()+
 
 ##tpr
 
-u5_tpr <- hims_delta_clean %>% 
-  dplyr::select(Ward, periodname, fever_u5, rdt_u5, rdt_pos_u5, micro_u5, micro_pos_u5, malaria_u5) %>% 
+u5_tpr_delta <- hims_delta_clean %>% 
+  dplyr::select(Ward, periodname, fever_u5, rdt_u5, rdt_pos_u5, micro_u5, micro_pos_u5, malaria_u5, gen_attd) %>% 
   mutate(tested = rdt_u5 + micro_u5,
          positive = rdt_pos_u5 + micro_pos_u5) %>% 
   group_by(Ward) %>%
   summarise(total_tested = sum(tested, na.rm = TRUE),
     total_positive = sum(positive, na.rm = TRUE)) %>% 
   ungroup() %>% 
-  mutate(u5_tpr = total_positive/total_tested)
+  mutate(u5_tpr = total_tested/total_positive)
+ 
+
+u5_tpr_delta_2 <- hims_delta_clean %>% 
+  dplyr::select(Ward, fever_u5, rdt_u5, rdt_pos_u5, micro_u5, micro_pos_u5, malaria_u5, gen_attd, tested_u5, pos_u5) %>% 
+  group_by(Ward) %>% 
+  summarise(
+    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
+  ) %>% 
+  ungroup()
   
 
-ward_tpr <- left_join(delta_shp, u5_tpr, by = c("WardName" = "Ward"))
+ward_tpr <- left_join(delta_shp, u5_tpr_delta_2, by = c("WardName" = "Ward"))
   
 ggplot()+
   geom_sf(data = ward_tpr, #%>% 
             #mutate(u5_tpr = ifelse(is.nan(u5_tpr), 0, u5_tpr)), 
-          aes(geometry = geometry, fill = u5_tpr))+
+          aes(geometry = geometry, fill = u5_tpr2))+
   scale_fill_continuous(low = "pink", high = "maroon",na.value = "black")+
   labs(title = "TPR in children under 5 in Delta Wards, 2023",
        fill = "TPR",
        caption = "Black wards have no data. Either no children were tested or no facility was recorded in the ward ")+
   map_theme()
 
+
+
 delta_wards <- read.csv(file.path(OutputsDir, "delta_wards.csv"))
 
-delta_wards <- delta_wards %>%
-  left_join(u5_tpr %>% 
-              dplyr::select(Ward, u5_tpr), by = c("WardName" = "Ward"))
+delta_wards2 <- delta_wards %>%
+  left_join(u5_tpr_delta_2 %>% 
+              dplyr::select(Ward, u5_tpr, u5_tpr2, u5_tpr3), by = c("WardName" = "Ward"))
 
+write.csv(delta_wards2, file.path(OutputsDir,"delta_wards.csv"), append = T)
+
+
+delta_variables <- read.csv(file.path(ShpfilesDir, "delta_variables.csv"))
+delta_variables2 <- delta_variables %>% 
+  left_join(delta_wards2 %>% 
+              dplyr::select(WardName, totalArea, urbanArea, urbanPercentage, urban_gee, u5_tpr2), by = "WardName")
+
+write.csv(delta_variables2, file.path(OutputsDir,"delta_variables_shiny.csv"))
 
