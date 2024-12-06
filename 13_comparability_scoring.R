@@ -20,10 +20,6 @@ st_write(kano_wards_shp, file.path(ShpfilesDir, "KN_5_Wards/Kano_5.shp"))
 
 
 
-# colour palettes for the map 
-palettes_00 <- list(rev(RColorBrewer::brewer.pal(5, "OrRd")))[[1]][5:1]
-palettes <- list(rev(RColorBrewer::brewer.pal(5, "RdYlBu")))
-
 #data files
 ibadan_variables <- read.csv(file.path(OutputsDir, "NMEP Malaria Risk Scores", "ibadan_field_variables.csv"))
 kano_variables <- read.csv(file.path(OutputsDir, "NMEP Malaria Risk Scores", "kano_field_variables.csv"))
@@ -33,16 +29,18 @@ kano_wards_shp <- st_read( file.path(ShpfilesDir, "KN_5_Wards/Kano_5.shp"))
 
 #plot initial maps
 
-ibadan_variables <- ibadan_variables %>%
-  left_join(ibadan_wards_shp %>% dplyr::select(WardName, geometry), by = c("Ward" = "WardName"))
-
-ib_covariates <- c("malaria_positive", "net_own", "net_use2")
+covariates <- c("malaria_positive", "net_own", "net_use2")
 
 new_names <- c(malaria_positive = "TPR",
                net_own = "Net Ownership",
                net_use2 = "Net Use")
+#Ibadan
 
-for (covariate in ib_covariates) {
+ibadan_variables <- ibadan_variables %>%
+  left_join(ibadan_wards_shp %>% dplyr::select(WardName, geometry), by = c("Ward" = "WardName"))
+
+
+for (covariate in covariates) {
   plotting_data <- ibadan_variables %>%
     reshape2::melt(id.vars = c("Ward", "geometry")) %>% 
     filter(variable == covariate) %>% 
@@ -51,37 +49,47 @@ for (covariate in ib_covariates) {
   p0 <- ggplot()+
     geom_sf(data = plotting_data, aes(geometry = geometry, fill = value), 
             color = "gray")+
-    scale_fill_continuous(low = "lightblue", high = "darkblue")+
-    labs(title = paste("Inital Distribution", new_names[covariate]),
-         fill = new_names[covariate])+
+    scale_fill_continuous(low = "lightyellow", high = "darkred")+
+    geom_text_repel(
+      data = ibadan_variables,
+      aes(label =  Ward, geometry = geometry),color ='black',
+      stat = "sf_coordinates", min.segment.length = 0, size = 3.5, force = 1)+
+    labs(title = paste(new_names[covariate] , "in Ibadan"),
+         fill = new_names[covariate],
+         x = "", y = "")+
     map_theme()
   
   print(p0)
-  ggsave(filename = paste0(OutputsDir, "/NMEP Malaria Risk Scores/Plots/Ibadan/","values_", covariate, ".png"), plot = p0, width = 8, height = 6)
+ ggsave(filename = paste0(OutputsDir, "/NMEP Malaria Risk Scores/Plots/Ibadan/","values_", covariate, ".png"), plot = p0, width = 8, height = 6)
 }
 
+#Kano
+kano_variables <- kano_variables %>%
+  left_join(kano_wards_shp %>% dplyr::select(WardName, geometry), by = c("Ward" = "WardName"))
 
-###############################NORMALIZE ##########################################
-normalize <- function(x) {
-  ifelse(is.na(x), NA, (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE)))
+
+for (covariate in covariates) {
+  plotting_data <- kano_variables %>%
+    reshape2::melt(id.vars = c("Ward", "geometry")) %>% 
+    filter(variable == covariate) %>% 
+    mutate(variable = new_names[variable])
+  
+  p0 <- ggplot()+
+    geom_sf(data = plotting_data, aes(geometry = geometry, fill = value), 
+            color = "gray")+
+    scale_fill_continuous(low = "lightyellow", high = "darkred")+
+    geom_text_repel(
+      data = kano_variables,
+      aes(label =  Ward, geometry = geometry),color ='black',
+      stat = "sf_coordinates", min.segment.length = 0, size = 3.5, force = 1)+
+    labs(title = paste(new_names[covariate] , "in Kano"),
+         fill = new_names[covariate],
+         x = "", y = "")+
+    map_theme()
+  
+  print(p0)
+  ggsave(filename = paste0(OutputsDir, "/NMEP Malaria Risk Scores/Plots/Kano/","values_", covariate, ".png"), plot = p0, width = 8, height = 6)
 }
-
-IB_normalized <- ibadan_variables %>%
-  mutate(prev_normal = normalize(malaria_positive),
-    net_own_normal = normalize(net_own),
-    net_use_normal = normalize(net_use2))  
-
-IB_model <- IB_normalized %>% 
-  mutate (
-    model01 = prev_normal - net_own_normal -net_use_normal,
-    model02 = prev_normal - net_own_normal,
-    model03 = prev_normal - net_use_normal,
-    model04 = - net_own_normal - net_own_normal,
-    model05 = - net_own_normal,
-    model06 = - net_use_normal)
-
-
-
 
     
     
