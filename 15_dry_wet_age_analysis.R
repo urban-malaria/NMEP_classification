@@ -549,23 +549,48 @@ create_tpr_line_plot <- function(data, title, season) {
   summarized_data <- data %>%
     group_by(age_cat, ward) %>%
     summarize(
-      tpr = mean(malaria_positive, na.rm = TRUE), # Calculate mean positivity rate
-      .groups = "drop" # Ungroup after summarization
+      tpr = mean(malaria_positive, na.rm = TRUE), # calculate mean positivity rate
+      .groups = "drop"
     )
   
-  # remove age_cat = NA
-  summarized_data <- summarized_data %>%
-    dplyr::filter(!is.na(age_cat))
+  # calculate TPR for each age group (not separated by ward) for "overall" line on plot
+  overall <- data %>%
+    group_by(age_cat) %>%
+    summarize(
+      tpr = mean(malaria_positive, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  # remove age_cat = NA for both
+  summarized_data <- summarized_data %>% dplyr::filter(!is.na(age_cat))
+  overall <- overall %>% dplyr::filter(!is.na(age_cat))
   
   # put in age order
   summarized_data <- summarized_data %>%
     mutate(age_cat = factor(age_cat, levels = age_order)) %>%
     arrange(age_cat)
+  overall <- overall %>%
+    mutate(age_cat = factor(age_cat, levels = age_order)) %>%
+    arrange(age_cat)
   
-  # Create the line plot
-  line_plot <- ggplot(summarized_data, aes(x = age_cat, y = tpr, color = ward, group = ward)) +
-    geom_line(size = 1) +
-    geom_point(size = 2) +
+  overall$age_cat <- factor(overall$age_cat, 
+                            levels = c("under 5", "6–10", "11–17", "18–30", "31+"), 
+                            ordered = TRUE)
+  
+  # create the line plot
+  line_plot <- ggplot() +
+    geom_line(data = summarized_data, # ward-specific lines
+              aes(x = age_cat, y = tpr, color = ward, group = ward), 
+              size = 1) +
+    geom_point(data = summarized_data, 
+               aes(x = age_cat, y = tpr, color = ward, group = ward), 
+               size = 2) +
+    geom_line(data = overall, # overall lines
+              aes(x = age_cat, y = tpr, group = 1),
+              color = "black", size = 1) +
+    geom_point(data = overall, 
+               aes(x = age_cat, y = tpr), 
+               color = "black", size = 2) + 
     scale_color_manual(values = line_palette) +
     scale_y_continuous(labels = scales::percent_format()) +
     labs(
@@ -1048,3 +1073,171 @@ stacked_bar_plot <- ggplot(stacked_data, aes(x = group, y = proportion, fill = r
 print(stacked_bar_plot)
 
 ggsave(filename = paste0(NMEPOutputs, "/pregnant_analysis/", Sys.Date(), '_preg_agegroup_plot.pdf'), plot = stacked_bar_plot, width = 8, height = 6)
+
+
+## =========================================================================================================================================
+### WEIGHTED ANALYSIS: Odds Ratio Plots
+## =========================================================================================================================================
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+### Get Weighted Values for Each Ward
+## -----------------------------------------------------------------------------------------------------------------------------------------
+
+# define survey design for weighted calculations
+kano_design <- svydesign(
+  id = ~sn + ea,  # specify sampling units
+  strata = ~Ward + settlement_type,  # stratify by ward and settlement type
+  weights = ~hh_weight,  # apply household weights
+  data = combined_df,  # input dataset
+  nest = TRUE  # ensure proper nesting of survey levels
+)
+
+# calculate weighted malaria prevalence by ward
+weighted_ward_tpr_kn_u5 <- svyby(~malaria_positive, ~Ward, u5_design, svymean, na.rm = TRUE)
+
+# calculate weighted net ownership by ward
+weighted_ward_net_own_kn_u5 <- svyby(~net_own, ~Ward, u5_design, svymean, na.rm = TRUE)
+
+# calculate weighted net use among households that own nets by ward
+weighted_ward_net_use3_kn_u5 <- svyby(~net_use3, ~Ward, u5_design, svymean, na.rm = TRUE)
+
+# combine weighted results with a list of wards
+kano_list <- data.frame(Ward = c("Dorayi", "Fagge", "Giginyu", "Gobirawa", "Zango"))
+all_kn_u5 <- list(kano_list, weighted_ward_tpr_kn_u5, weighted_ward_net_own_kn_u5, weighted_ward_net_use3_kn_u5)
+kano_summary_u5 <- reduce(all_kn_u5, left_join, by = "Ward")  # merge all datasets by ward
+
+# update ward name for "Fagge"
+kano_summary_u5 <- kano_summary_u5 %>%
+  mutate(Ward = ifelse(Ward == "Fagge", "Fagge D2", Ward))
+
+# save combined summary to csv
+write.csv(kano_summary_u5, file.path(OutputsDir, "NMEP Malaria Risk Scores", "u5_kano_field_variables.csv"))
+
+## -----------------------------------------------------------------------------------------------------------------------------------------
+### Weighted Regressions
+## -----------------------------------------------------------------------------------------------------------------------------------------
+
+# get weighted odds ratios for individual-level analysis
+# get_model_results applies survey design and gets adjusted model, unadjusted (net own only), and unadjusted (net use only)
+kano_individuals_u5 <- get_model_results(kano_data_clean_u5)
+
+# remove intercept term from results
+kano_individuals_u5 <- kano_individuals_u5 %>%
+  filter(term != "(Intercept)")
+
+net_colors_adjusted = c("#FF817E", "#01377D", "#26B170")
+
+# plot odds ratios for individual-level analysis
+individual_OR_plot <- ggplot(kano_individuals_u5, aes(x = oddsratio, y = term, colour = model)) +
+  geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed") +  # add reference line at OR = 1
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5)) +  # error bars
+  geom_point(size = 2, alpha = 0.5, position = position_dodge(width = 0.5)) +  # plot points
+  labs(
+    x = "Odds Ratio",
+    y = "Predictors",
+    title = "Net Use and Net Ownership \non Positive Malaria Test in Kano",
+    subtitle = "Children Under Five Only",
+    colour = "Model"
+  ) +
+  scale_y_discrete(
+    breaks = c("net_use3", "net_own"),
+    labels = c("Net Use", "Net Ownership")  # custom labels for y-axis
+  ) +
+  scale_colour_manual(
+    values = net_colors_adjusted,
+    labels = c("Adjusted", "Unadjusted (Net Ownership Only)", "Unadjusted (Net Use Only)")
+  ) +
+  theme_manuscript() +
+  theme(plot.subtitle = element_text(hjust = 0.5))
+
+ggsave(filename = paste0(u5PlotsDir, "/", Sys.Date(), '_individual_ORs.pdf'), plot = individual_OR_plot, width = 12, height = 8)
+
+# analyze odds ratios by ward
+ward_data_kn_u5 <- kano_data_clean_u5 %>% group_split(Ward)  # split data by ward
+names(ward_data_kn_u5) <- c("Dorayi", "Fagge", "Giginyu", "Gobirawa", "Zango")  # name each group
+
+ward_results_kn_u5 <- ward_data_kn_u5 %>%
+  map_df(~ get_model_results(.x), .id = "Ward")  # calculate models for each ward
+
+# change model names for plotting
+ward_results_kn_u5 <- ward_results_kn_u5 %>%
+  mutate(
+    model = case_when(
+      model == "adjusted" ~ "Adjusted",
+      model == "unadjusted_net_own" ~ "Unadjusted (Net Ownership Only)",
+      model == "unadjusted_net_use" ~ "Unadjusted (Net Use Only)",
+    )
+  )
+
+# # cap CI at (1, 10) (Fagge CIs are super wide) and OR at 10
+# ward_results_kn_u5 <- ward_results_kn_u5 %>%
+#   mutate(
+#     ci_low = ifelse(ci_low < 1, ci_low, 1),
+#     ci_high = ifelse(ci_high > 10, 10, ci_high),
+#     oddsratio = ifelse(oddsratio > 10, 10, oddsratio)
+#   )
+
+# plot odds ratios by ward
+adjusted_ward_OR_plot <- ggplot(ward_results_kn_u5 %>% filter(term != "(Intercept)"),
+                                aes(x = oddsratio, y = Ward, colour = term)) +
+  geom_point(size = 2, position = position_dodge(width = 0.5)) +  # plot points
+  geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed") +  # add reference line
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5)) +  # error bars
+  facet_grid(~model, scales = "free") +  # facet by model
+  labs(
+    title = "Net Ownership and Net Use on \nPositive Malaria Test in Kano Wards",
+    subtitle = "Children Under Five Only",
+    x = "Odds Ratio",
+    y = "Ward",
+    color = "Type"
+  ) +
+  scale_colour_manual(
+    values = net_colors,
+    labels = c("Net Ownership", "Net Use")
+  ) +
+  theme_manuscript() + 
+  theme(plot.subtitle = element_text(hjust = 0.5))
+adjusted_ward_OR_plot
+ggsave(filename = paste0(u5PlotsDir, "/", Sys.Date(), '_adjusted_ward_ORs.pdf'), plot = adjusted_ward_OR_plot, width = 12, height = 8)
+
+
+# analyze odds ratios by settlement type
+settle_data_kn_u5 <- kano_data_clean_u5 %>% group_split(settlement_type)  # split data by settlement type
+names(settle_data_kn_u5) <- c("Formal", "Informal", "Slum")  # name each group
+
+settle_results_kn_u5 <- settle_data_kn_u5 %>%
+  map_df(~ get_model_results(.x), .id = "settlement_type")  # calculate models for each settlement type
+
+# change model names for plotting
+settle_results_kn_u5 <- settle_results_kn_u5 %>%
+  mutate(
+    model = case_when(
+      model == "adjusted" ~ "Adjusted",
+      model == "unadjusted_net_own" ~ "Unadjusted (Net Ownership Only)",
+      model == "unadjusted_net_use" ~ "Unadjusted (Net Use Only)",
+    )
+  )
+
+# plot odds ratios by settlement type
+settlement_type_OR_plot <- ggplot(settle_results_kn_u5 %>% filter(term != "(Intercept)"),
+                                  aes(x = oddsratio, y = settlement_type, colour = term)) +
+  geom_point(size = 2, position = position_dodge(width = 0.5)) +  # plot points
+  geom_vline(aes(xintercept = 1), size = 0.25, linetype = "dashed") +  # add reference line
+  geom_errorbarh(aes(xmax = ci_high, xmin = ci_low), size = 0.5, height = 0.2, position = position_dodge(width = 0.5)) +  # error bars
+  facet_grid(~model, scales = "free") +  # facet by model
+  labs(
+    title = "Net Ownership and Net Use on Positive Malaria Test in Kano Settlements",
+    subtitle = "Children Under Five Only",
+    x = "Odds Ratio",
+    y = "Settlement Type",
+    color = "Type"
+  ) +
+  scale_colour_manual(
+    values = net_colors,
+    labels = c("Net Ownership", "Net Use")
+  ) +
+  theme_manuscript()  + 
+  theme(plot.subtitle = element_text(hjust = 0.5))
+
+ggsave(filename = paste0(u5PlotsDir, "/", Sys.Date(), '_settlementtype_ORs.pdf'), plot = settlement_type_OR_plot, width = 12, height = 8)
+
