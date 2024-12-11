@@ -24,7 +24,10 @@ OutputsDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App"
 plotsDir <- file.path(OutputsDir, "Plots")
 
 FieldDataDir <- file.path(DataDir, "nigeria/kano_ibadan_epi/new_field_data")
+KanoFieldData <- file.path(FieldDataDir, "241106_Kano_latest_data")
 
+u5PlotsDir <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/plots/u5_plots")
+NMEPOutputs <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/NMEP_report")
 
 #load packages
 
@@ -100,7 +103,7 @@ get_model_results <- function(data) {
       oddsratio = round(exp(estimate), 3),
       ci_low = round(exp(estimate - (1.96 * std.error)), 3),
       ci_high = round(exp(estimate + (1.96 * std.error)), 3),
-      model = "unadjusted"
+      model = "unadjusted_net_own"
     )
   # unadjusted: net_use only
   unadjusted_net_use <- svyglm(malaria_positive ~ net_use3, family = "binomial", design = design)
@@ -109,7 +112,7 @@ get_model_results <- function(data) {
       oddsratio = round(exp(estimate), 3),
       ci_low = round(exp(estimate - (1.96 * std.error)), 3),
       ci_high = round(exp(estimate + (1.96 * std.error)), 3),
-      model = "unadjusted"
+      model = "unadjusted_net_use"
     )
   bind_rows(adjusted_results, unadjusted_net_own_results, unadjusted_net_use_results)
 }
