@@ -27,6 +27,7 @@ wet <- wet %>%
                 ward_weight, ea_settlement_weight, overall_hh_weight, ind_weights_hh,  #weights
                 nh101a, nh105, slept_under_net, #net ownership/ use
                 bi12i, # interview visit 1 date
+                longitude, latitude # (of household)
                 #bi9
   ) %>%
   filter(!is.na(settlement1)) %>%  
@@ -78,7 +79,7 @@ wet <- wet %>%
   mutate(season = "Wet") %>%
   dplyr::select(sn, hl1, sex, age, dob, age_cat, pregnant, ward, settlement_type, visit1_date, unique_id, malaria_positive,
                 woman_malaria_positive, season, ea, ward_weight, ea_weight, hh_weight, ind_weight, net_use_frequency,
-                net_use, net_own, net_use2, net_use3)
+                net_use, net_own, net_use2, net_use3, longitude, latitude)
 
 # APPLY SURVEY WEIGHTING
 wet_weighted <- svydesign(
@@ -182,11 +183,16 @@ wet_recoded <- wet %>%
 
 EA_weight_adjusted_tpr <- wet_recoded %>%
   group_by(settlement_type, ea, ward) %>%
-  summarise(Positive = sum(malaria_positive),
-            total = n(),
-            Negative = total - Positive,
-            tpr = round(sum(malaria_positive * hh_weight) / sum(hh_weight) * 100, 3),
-            compliment = 100 - tpr)
+  summarise(
+    Positive = sum(malaria_positive),
+    total = n(),
+    Negative = total - Positive,
+    tpr = round(sum(malaria_positive * hh_weight) / sum(hh_weight) * 100, 3),
+    compliment = 100 - tpr,
+    # Calculate the centroid of the household locations within each EA
+    avg_latitude = mean(latitude, na.rm = TRUE),  # Take the average latitude for each EA
+    avg_longitude = mean(longitude, na.rm = TRUE)  # Take the average longitude for each EA
+  )
 
 # save this as .csv
 write.csv(EA_weight_adjusted_tpr, file.path(NMEPOutputs, "EA_tpr_data.csv"), row.names = F) 
@@ -204,6 +210,7 @@ tpr_settlement_box <- ggplot(EA_weight_adjusted_tpr, aes(x = settlement_type, y 
   scale_color_manual(values = c("#6baed6", "#74c476")) +
   labs(
     title = "Distribution of Malaria TPR by \nSettlement Type and Enumeration Area",
+    subtitle = "Wet Season Data Only",
     x = "Settlement Type",
     y = "Test Positivity Rate (TPR) (%)",
     color = "Settlement Type",
@@ -213,6 +220,7 @@ tpr_settlement_box <- ggplot(EA_weight_adjusted_tpr, aes(x = settlement_type, y 
   theme(
     legend.position = "right",  # Adjust legend position
     plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5)
   )
 tpr_settlement_box
 
@@ -223,5 +231,120 @@ ggsave(filename = paste0(NMEPOutputs, "/presentation/", Sys.Date(), '_weighted_b
 ### PLOT 3: Map of TPR by Ward with Overlaid EA Estimate
 ## =========================================================================================================================================
 
+# read in Kano shapefile
+kano_shapefile <- "/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano/Kano.shp"
+kano.shp <- st_read(kano_shapefile)
+
+# rename vars
+kano.shp <- kano.shp %>%
+  rename(ward = "WardName")
+
+# merge spatial data with TPR data
+merged_data <- kano.shp %>%
+  left_join(EA_weight_adjusted_tpr, by = "ward")
+
+# Ensure 'merged_data' is an sf object (if it is not already)
+merged_data_sf <- st_as_sf(merged_data, wkt = "geometry")
+
+# First, ensure your merged_data_sf is in the correct spatial format (sf object)
+merged_data_sf <- st_as_sf(merged_data_sf, coords = c("avg_longitude", "avg_latitude"), crs = 4326, remove = FALSE)
+
+merged_data_sf <- merged_data_sf %>% 
+  mutate(
+    tpr_category = case_when(
+      tpr <= 20 ~ "0-20",        # Category for TPR between 0 and 20
+      tpr <= 40 ~ "21-40",       # Category for TPR between 21 and 40
+      tpr <= 60 ~ "41-60",       # Category for TPR between 41 and 60
+      tpr <= 80 ~ "61-80",       # Category for TPR between 61 and 80
+      tpr <= 100 ~ "81-100",     # Category for TPR between 81 and 100
+      TRUE ~ "NA"                # Handle any outlier values (if needed)
+    )
+  )
+
+tpr_map <- ggplot(merged_data_sf) +  
+  # Map of wards filled by categorical TPR
+  geom_sf(aes(fill = tpr_category), color = "white", size = 0.2) +  
+  
+  # Overlay EA points based on the average latitude and longitude (using centroid coordinates)
+  #geom_point(aes(x = avg_longitude, y = avg_latitude, color = tpr_category), size = 2, shape = 16, stroke = 0.2, alpha = 0.6) +  
+  
+  geom_point(aes(x = avg_longitude, y = avg_latitude, fill = tpr_category), 
+             color = "black", size = 2, shape = 21, stroke = 0.5, alpha = 0.8) +
+  
+  # Categorical color scale for TPR categories
+  scale_fill_manual(
+    values = c(
+      "0-20" = "#fff33b", 
+      "21-40" = "#fdc70c", 
+      "41-60" = "#f3903f", 
+      "61-80" = "#ed683c", 
+      "81-100" = "#e93e3a", 
+      "NA" = "lightgrey"
+    ), 
+    na.value = "lightgrey"
+  ) +  
+  
+  # scale_color_manual(
+  #   values = c(
+  #     "0-20" = "#fff33b", 
+  #     "21-40" = "#fdc70c", 
+  #     "41-60" = "#f3903f", 
+  #     "61-80" = "#ed683c", 
+  #     "81-100" = "#e93e3a", 
+  #     "NA" = "lightgrey"
+  #   ), 
+  #   na.value = "lightgrey"
+  # ) +  
+
+  scale_fill_manual(
+    values = c(
+      "0-20" = "#fff33b", 
+      "21-40" = "#fdc70c", 
+      "41-60" = "#f3903f", 
+      "61-80" = "#ed683c", 
+      "81-100" = "#e93e3a", 
+      "NA" = "lightgrey"
+    ), 
+    na.value = "lightgrey"
+  ) +
+  
+  # Labels for the map
+  labs(title = "Map of TPR by Ward with Overlaid EA Estimate", 
+       subtitle = "Wet Season Data Only", 
+       fill = "TPR Categories") +  
+  
+  # Minimal theme with adjustments
+  theme_minimal() +  
+  theme(
+    legend.position = "bottom", 
+    plot.title = element_text(hjust = 0.5), 
+    plot.subtitle = element_text(hjust = 0.5), 
+    axis.text = element_blank(),  # Remove axis labels
+    axis.ticks = element_blank(),  # Remove axis ticks
+    axis.title = element_blank()   # Remove axis titles
+  )
+tpr_map
 
 
+# create map
+tpr_map <- ggplot(merged_data) + 
+  geom_sf(aes(fill = tpr), color = "white", size = 0.2) +
+  scale_fill_viridis_c(option = "plasma", na.value = "lightgrey") +
+  geom_point(aes(x = avg_longitude, y = avg_latitude), color = "black", size = 2, shape = 16, alpha = 0.6) +  
+  labs(title = "Map of TPR by Ward with Overlaid EA Estimate", 
+       subtitle = "Wet Season Data Only", 
+       fill = "TPR (%)", 
+       color = "EA Estimate") + 
+  theme_minimal() +
+  theme(
+    legend.position = "bottom",
+    plot.title = element_text(hjust = 0.5),
+    plot.subtitle = element_text(hjust = 0.5),
+    axis.text = element_blank(),  # Remove axis labels
+    axis.ticks = element_blank(),  # Remove axis ticks
+    axis.title = element_blank()   # Remove axis titles
+  )
+tpr_map
+
+# save as .pdf
+ggsave(filename = paste0(NMEPOutputs, "/presentation/", Sys.Date(), '_map_tpr_wards_kano.pdf'), plot = tpr_map, width = 6, height = 6)
