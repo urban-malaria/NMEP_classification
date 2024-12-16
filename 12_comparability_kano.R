@@ -1,15 +1,24 @@
+# ==========================================================================================================================================
+# Script Name: Kano Comparability
+# Authors: Hephzibah, Grace
+# Purpose: Conduct malaria prevalence analyses
+# ==========================================================================================================================================
+
 rm(list = ls())
 
 source("~/NMEP_classification/load_path.R", echo = T)
+
+# grace
+source("/Users/grace/Desktop/UMP/NMEP_classification_my_fork/load_path.R", echo = T)
 
 KanoFieldData <- file.path(FieldDataDir, "241106_Kano_latest_data")
 
 ####################################################################################
 ## Manipulate column did you sleep under nets
 
+# read in data
 kano_data <- read_dta(file.path(FieldDataDir, "Kano Wet Season Data Sept. 2024",
                                 "long_wetseason_household_membersV2_678_cols.dta"))
-
 
 kn_household_data <- read_dta(file.path(FieldDataDir, "Kano Wet Season Data Sept. 2024",
                                 "KN_Merged_Long_Data_with_Net_use.dta"))
@@ -65,7 +74,8 @@ kano_data_clean <- kano_data_full %>%
                 Wardn, #settle_type, 
                 settlement1, enumeration_area, 
                 ward_weight, ea_settlement_weight, overall_hh_weight, ind_weights_hh,  #weights
-                nh101a, nh105, slept_under_net #net ownership/ use
+                nh101a, nh105, slept_under_net, #net ownership/ use
+                bi12i # interview visit 1 date
   ) %>%
   filter(!is.na(settlement1)) %>%  
   filter(!Wardn == "") %>%  
@@ -110,7 +120,7 @@ ggplot(surveyed_by_settlement_kn, aes(x = Ward, y = count_settlements, fill = se
        x = "Ward", y = "Number", fill = "Settlement Type")+
   theme_manuscript()
 
-#malaria prevalence
+#malaria prevalence by ward
 
 malaria_prevalence_kn <- kano_data_clean %>%
   filter(!is.na(q302)) %>%  #remove non-tested individuals
