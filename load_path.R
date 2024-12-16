@@ -144,3 +144,7 @@ get_model_results <- function(data) {
     )
   bind_rows(adjusted_results, unadjusted_net_own_results, unadjusted_net_use_results)
 }
+
+
+#source("~/NMEP_classification/15_extraction_function.R", echo = T)
+#source("~/NMEP_classification/pop_estimate_function.R", echo = T)
