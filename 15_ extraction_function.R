@@ -521,7 +521,6 @@ katsina.shp <- sf::st_read(file.path("/Users/grace/Urban Malaria Proj Dropbox/ur
 katsina_itn <- readxl::read_xlsx(
   "/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/ITN_distribution/household_member_ward_summaries_Itn_distribution/ITN_distribution_total_ward_katsina_2022.xlsx"
 )
-katsina_itn <- read.csv("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/ITN_distribution/household_member_ward_summaries_Itn_distribution/katsina_itn_recoded.csv")
 
 # convert shapefiles to dfs
 katsina_shp_df <- as.data.frame(katsina.shp)
