@@ -5,6 +5,8 @@
 # Purpose: Extracts EVI, NDVI, rainfall, distance to water bodies, relative humidity, temperature, housing quality, PFPR (Plasmodium
 #          Falciparum Parasite Rate), night time light, flood, NDWI (Normalized Difference Water Index), NDMI (Normalized Difference Moisture Index), 
 #          elevation, surface soil wetness
+#
+#          Also recodes ward names in ITN datasets to match ward names in the state-level shapefiles
 # ==========================================================================================================================================
 
 # script with directories, functions, etc
