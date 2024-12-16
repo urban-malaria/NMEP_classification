@@ -38,7 +38,7 @@ dry <- dry %>%
                 settlement_type, # settlement type
                 enumeration_area, 
                 ward_weight, ea_settlement_weight, hhs_weights,
-                overall_hh_weight, ind_weights_hh,  # weights not in dry df
+                overall_hh_weight, ind_weights_hh,
                 #nh101a, nh105, slept_under_net, # dry season data does not include net ownership/use
                 bi12i, # interview visit 1 date
                 # bi9
@@ -93,7 +93,7 @@ wet <- wet %>%
   ) %>%
   filter(!is.na(settlement1)) %>%  
   filter(!Wardn == "") %>%  
-  filter(!is.na(q302)) %>%  #remove non-tested individuals, included this line after running surveyed population
+  filter(!is.na(q302)) %>%  # remove non-tested individuals, included this line after running surveyed population
   mutate(unique_id = paste(sn, hl1, sep = "_")) %>% 
   rename(ward = Wardn,
          settlement_type = settlement1,
@@ -154,6 +154,29 @@ wet <- wet %>%
 
 # combine the dry and wet data
 combined_df <- bind_rows(dry, wet)
+
+# define survey design for weighted calculations
+combined_weighted <- svydesign(
+  id = ~sn + ea,  # specify sampling units
+  strata = ~Ward + settlement_type,  # stratify by ward and settlement type
+  weights = ~hh_weight,  # apply household weights
+  data = combined_df,  # input dataset
+  nest = TRUE  # ensure proper nesting of survey levels
+)
+dry_weighted <- svydesign(
+  id = ~sn + ea,  # specify sampling units
+  strata = ~Ward + settlement_type,  # stratify by ward and settlement type
+  weights = ~hh_weight,  # apply household weights
+  data = dry,  # input dataset
+  nest = TRUE  # ensure proper nesting of survey levels
+)
+wet_weighted <- svydesign(
+  id = ~sn + ea,  # specify sampling units
+  strata = ~Ward + settlement_type,  # stratify by ward and settlement type
+  weights = ~hh_weight,  # apply household weights
+  data = wet_df,  # input dataset
+  nest = TRUE  # ensure proper nesting of survey levels
+)
 
 ## =========================================================================================================================================
 ### Sample Sizes by Age Group, Season, and Ward
@@ -254,39 +277,61 @@ print(doc, target = file_path)
 color_palette = c("#f2a5a1", "#c55c80")
 
 # dfs for each age group: combined wet and dry data
-u5 <- combined_df %>%
-  dplyr::filter(age_cat == "under 5")
-six_ten <- combined_df %>%
-  dplyr::filter(age_cat == "6–10")
-eleven_seventeen <- combined_df %>%
-  dplyr::filter(age_cat == "11–17")
-eighteen_thirty <- combined_df %>%
-  dplyr::filter(age_cat == "18–30")
-thirtyone_plus <- combined_df %>%
-  dplyr::filter(age_cat == "31+")
+u5 <- combined_df %>% dplyr::filter(age_cat == "under 5")
+six_ten <- combined_df %>% dplyr::filter(age_cat == "6–10")
+eleven_seventeen <- combined_df %>% dplyr::filter(age_cat == "11–17")
+eighteen_thirty <- combined_df %>% dplyr::filter(age_cat == "18–30")
+thirtyone_plus <- combined_df %>% dplyr::filter(age_cat == "31+")
 
 # dfs for each age group: wet data only
-u5_wet <- wet %>%
-  dplyr::filter(age_cat == "under 5")
-six_ten_wet <- wet %>%
-  dplyr::filter(age_cat == "6–10")
-eleven_seventeen_wet <- wet %>%
-  dplyr::filter(age_cat == "11–17")
-eighteen_thirty_wet <- wet %>%
-  dplyr::filter(age_cat == "18–30")
-thirtyone_plus_wet <- wet %>%
-  dplyr::filter(age_cat == "31+")
+u5_wet <- wet %>% dplyr::filter(age_cat == "under 5")
+six_ten_wet <- wet %>% dplyr::filter(age_cat == "6–10")
+eleven_seventeen_wet <- wet %>% dplyr::filter(age_cat == "11–17")
+eighteen_thirty_wet <- wet %>% dplyr::filter(age_cat == "18–30")
+thirtyone_plus_wet <- wet %>% dplyr::filter(age_cat == "31+")
 
 # dfs for each age group: dry data only
-u5_dry <- dry %>%
+u5_dry <- dry %>% dplyr::filter(age_cat == "under 5")
+six_ten_dry <- dry %>% dplyr::filter(age_cat == "6–10")
+eleven_seventeen_dry <- dry %>% dplyr::filter(age_cat == "11–17")
+eighteen_thirty_dry <- dry %>% dplyr::filter(age_cat == "18–30")
+thirtyone_plus_dry <- dry %>% dplyr::filter(age_cat == "31+")
+
+# WEIGHTED AGE DFS
+# dfs for each age group: combined wet and dry data (weighted)
+u5_weighted <- combined_weighted %>%
   dplyr::filter(age_cat == "under 5")
-six_ten_dry <- dry %>%
+six_ten_weighted <- combined_weighted %>%
   dplyr::filter(age_cat == "6–10")
-eleven_seventeen_dry <- dry %>%
+eleven_seventeen_weighted <- combined_weighted %>%
   dplyr::filter(age_cat == "11–17")
-eighteen_thirty_dry <- dry %>%
+eighteen_thirty_weighted <- combined_weighted %>%
   dplyr::filter(age_cat == "18–30")
-thirtyone_plus_dry <- dry %>%
+thirtyone_plus_weighted <- combined_weighted %>%
+  dplyr::filter(age_cat == "31+")
+
+# dfs for each age group: wet data only (weighted)
+u5_wet_weighted <- wet_weighted %>%
+  dplyr::filter(age_cat == "under 5")
+six_ten_wet_weighted <- wet_weighted %>%
+  dplyr::filter(age_cat == "6–10")
+eleven_seventeen_wet_weighted <- wet_weighted %>%
+  dplyr::filter(age_cat == "11–17")
+eighteen_thirty_wet_weighted <- wet_weighted %>%
+  dplyr::filter(age_cat == "18–30")
+thirtyone_plus_wet_weighted <- wet_weighted %>%
+  dplyr::filter(age_cat == "31+")
+
+# dfs for each age group: dry data only (weighted)
+u5_dry_weighted <- dry_weighted %>%
+  dplyr::filter(age_cat == "under 5")
+six_ten_dry_weighted <- dry_weighted %>%
+  dplyr::filter(age_cat == "6–10")
+eleven_seventeen_dry_weighted <- dry_weighted %>%
+  dplyr::filter(age_cat == "11–17")
+eighteen_thirty_dry_weighted <- dry_weighted %>%
+  dplyr::filter(age_cat == "18–30")
+thirtyone_plus_dry_weighted <- dry_weighted %>%
   dplyr::filter(age_cat == "31+")
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
@@ -352,51 +397,51 @@ create_tpr_plot <- function(data, title, subtitle, age_group) {
 
 # u5
 create_tpr_plot(
-  data = u5,
+  data = u5_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet and Dry Season Combined",
   subtitle = "Children Under 5",
   age_group = "u5"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/combined/", Sys.Date(), '_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", Sys.Date(), '_weighted_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
 
 # 6-10
 create_tpr_plot(
-  data = six_ten,
+  data = six_ten_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet and Dry Season Combined",
   subtitle = "Children Aged 6–10",
   age_group = "six_ten"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/combined/", Sys.Date(), '_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", Sys.Date(), '_weighted_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
 
 
 # 11-17
 create_tpr_plot(
-  data = eleven_seventeen,
+  data = eleven_seventeen_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet and Dry Season Combined",
   subtitle = "Children Aged 11–17",
   age_group = "eleven_seventeen"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/combined/", Sys.Date(), '_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", Sys.Date(), '_weighted_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
 
 
 # 18-30
 create_tpr_plot(
-  data = eighteen_thirty,
+  data = eighteen_thirty_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet and Dry Season Combined",
   subtitle = "Adults Aged 18–30",
   age_group = "eighteen_thirty"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/combined/", Sys.Date(), '_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", Sys.Date(), '_weighted_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
 
 
 # 30+
 create_tpr_plot(
-  data = thirtyone_plus,
+  data = thirtyone_plus_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet and Dry Season Combined",
   subtitle = "Adults Aged 31+",
   age_group = "thirtyone_plus"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/combined/", Sys.Date(), '_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", Sys.Date(), '_weighted_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
 
 
 # save all plots in a word doc
@@ -408,7 +453,7 @@ doc <- doc %>% body_add_gg(value = eighteen_thirty_tpr_plot, style = "centered",
 doc <- doc %>% body_add_gg(value = thirtyone_plus_tpr_plot, style = "centered", width = 6, height = 4)
 
 # save the document
-file_path <- file.path(NMEPOutputs, "/tpr_plots/", "/combined/", "tpr_by_age.docx")
+file_path <- file.path(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/combined/", "weighted_tpr_by_age.docx")
 print(doc, target = file_path)
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
@@ -417,51 +462,51 @@ print(doc, target = file_path)
 
 # u5
 create_tpr_plot(
-  data = u5_wet,
+  data = u5_wet_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet Season Only",
   subtitle = "Children Under 5",
   age_group = "u5"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/wet/", Sys.Date(), '_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", Sys.Date(), '_weighted_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
 
 # 6-10
 create_tpr_plot(
-  data = six_ten_wet,
+  data = six_ten_wet_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet Season Only",
   subtitle = "Children Aged 6–10",
   age_group = "six_ten"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/wet/", Sys.Date(), '_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", Sys.Date(), '_weighted_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
 
 
 # 11-17
 create_tpr_plot(
-  data = eleven_seventeen_wet,
+  data = eleven_seventeen_wet_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet Season Only",
   subtitle = "Children Aged 11–17",
   age_group = "eleven_seventeen"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/wet/", Sys.Date(), '_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", Sys.Date(), '_weighted_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
 
 
 # 18-30
 create_tpr_plot(
-  data = eighteen_thirty_wet,
+  data = eighteen_thirty_wet_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet Season Only",
   subtitle = "Adults Aged 18–30",
   age_group = "eighteen_thirty"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/wet/", Sys.Date(), '_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", Sys.Date(), '_weighted_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
 
 
 # 30+
 create_tpr_plot(
-  data = thirtyone_plus_wet,
+  data = thirtyone_plus_wet_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nWet Season Only",
   subtitle = "Adults Aged 31+",
   age_group = "thirtyone_plus"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/wet/", Sys.Date(), '_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", Sys.Date(), '_weighted_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
 
 
 # save all plots in a word doc
@@ -473,7 +518,7 @@ doc <- doc %>% body_add_gg(value = eighteen_thirty_tpr_plot, style = "centered",
 doc <- doc %>% body_add_gg(value = thirtyone_plus_tpr_plot, style = "centered", width = 6, height = 4)
 
 # save the document
-file_path <- file.path(NMEPOutputs, "/tpr_plots/", "/wet/", "tpr_by_age.docx")
+file_path <- file.path(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/wet/", "weighted_tpr_by_age.docx")
 print(doc, target = file_path)
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
@@ -482,48 +527,48 @@ print(doc, target = file_path)
 
 # u5
 create_tpr_plot(
-  data = u5_dry,
+  data = u5_dry_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nDry Season Only",
   subtitle = "Children Under 5",
   age_group = "u5"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/dry/", Sys.Date(), '_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", Sys.Date(), '_u5_tpr_plot.pdf'), plot = u5_tpr_plot, width = 6, height = 4)
 
 # 6-10
 create_tpr_plot(
-  data = six_ten_dry,
+  data = six_ten_dry_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nDry Season Only",
   subtitle = "Children Aged 6–10",
   age_group = "six_ten"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/dry/", Sys.Date(), '_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", Sys.Date(), '_6_10_tpr_plot.pdf'), plot = six_ten_tpr_plot, width = 6, height = 4)
 
 # 11-17
 create_tpr_plot(
-  data = eleven_seventeen_dry,
+  data = eleven_seventeen_dry_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nDry Season Only",
   subtitle = "Children Aged 11–17",
   age_group = "eleven_seventeen"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/dry/", Sys.Date(), '_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", Sys.Date(), '_11_17_tpr_plot.pdf'), plot = eleven_seventeen_tpr_plot, width = 6, height = 4)
 
 # 18-30
 create_tpr_plot(
-  data = eighteen_thirty_dry,
+  data = eighteen_thirty_dry_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nDry Season Only",
   subtitle = "Adults Aged 18–30",
   age_group = "eighteen_thirty"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/dry/", Sys.Date(), '_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", Sys.Date(), '_18_30_tpr_plot.pdf'), plot = eighteen_thirty_tpr_plot, width = 6, height = 4)
 
 # 30+
 create_tpr_plot(
-  data = thirtyone_plus_dry,
+  data = thirtyone_plus_dry_weighted,
   title = "Malaria Test Positivity Rate in Kano: \nDry Season Only",
   subtitle = "Adults Aged 31+",
   age_group = "thirtyone_plus"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", "/dry/", Sys.Date(), '_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", Sys.Date(), '_31_plus_tpr_plot.pdf'), plot = thirtyone_plus_tpr_plot, width = 6, height = 4)
 
 # save all plots in a word doc
 doc <- read_docx()
@@ -534,7 +579,7 @@ doc <- doc %>% body_add_gg(value = eighteen_thirty_tpr_plot, style = "centered",
 doc <- doc %>% body_add_gg(value = thirtyone_plus_tpr_plot, style = "centered", width = 6, height = 4)
 
 # save the document
-file_path <- file.path(NMEPOutputs, "/tpr_plots/", "/dry/", "tpr_by_age.docx")
+file_path <- file.path(NMEPOutputs, "/weighted/", "tpr_bar_charts/", "/dry/", "tpr_by_age.docx")
 print(doc, target = file_path)
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
@@ -615,25 +660,25 @@ create_tpr_line_plot <- function(data, title, season) {
 
 # apply function for dry, wet, and combined
 dry_plot <- create_tpr_line_plot(
-  data = dry, 
+  data = dry_weighted, 
   title = "Malaria Test Positivity Rate by Age Group: Dry Season",
   season = "dry"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", Sys.Date(), '_dry_line_plot.pdf'), plot = dry_line_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "line_plots/", Sys.Date(), '_weighted_dry_line_plot.pdf'), plot = dry_line_plot, width = 6, height = 4)
 
 wet_plot <- create_tpr_line_plot(
-  data = wet, 
+  data = wet_weighted, 
   title = "Malaria Test Positivity Rate by Age Group: Wet Season",
   season = "wet"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", Sys.Date(), '_wet_line_plot.pdf'), plot = wet_line_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "line_plots/", Sys.Date(), '_weighted_wet_line_plot.pdf'), plot = wet_line_plot, width = 6, height = 4)
 
 combined_plot <- create_tpr_line_plot(
-  data = combined_df, 
+  data = combined_weighted, 
   title = "Malaria Test Positivity Rate by Age Group: Combined Wet + Dry Seasons",
   season = "combined"
 )
-ggsave(filename = paste0(NMEPOutputs, "/tpr_plots/", Sys.Date(), '_combined_line_plot.pdf'), plot = combined_line_plot, width = 6, height = 4)
+ggsave(filename = paste0(NMEPOutputs, "/weighted/", "line_plots/", Sys.Date(), '_weighted_combined_line_plot.pdf'), plot = combined_line_plot, width = 6, height = 4)
 
 ## =========================================================================================================================================
 ### Plots for Net Data by Ward and by Age Group - Calculate Proportion of Net Ownership and Net Use
