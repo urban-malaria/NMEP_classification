@@ -115,3 +115,4 @@ get_model_results <- function(data) {
 }
 
 source("~/NMEP_classification/15_extraction_function.R", echo = T)
+source("~/NMEP_classification/pop_estimate_function.R", echo = T)
