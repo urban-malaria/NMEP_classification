@@ -27,28 +27,56 @@ FieldDataDir <- file.path(DataDir, "nigeria/kano_ibadan_epi/new_field_data")
 KanoFieldData <- file.path(FieldDataDir, "241106_Kano_latest_data")
 
 u5PlotsDir <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/plots/u5_plots")
-NMEPOutputs <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/NMEP_report")
+NMEPOutputs <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/NMEP_report/")
 
 #load packages
 
 
-list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
-                      "ggplot2", "labelled", "tidyverse", "janitor", "terra",
-                      "readxl", "mapsf", "survey","srvyr", "plotly", "hdf5r",
-                      "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", "ggpubr", "viridis", "patchwork", 
-                      "raster", "wordcloud", "ggwordcloud", "terra", "plotly",
-                      "gridExtra", "grid", "openxlsx", "officer", "magrittr", "mclust",
-                      "foot", "units", "tidyr", "foreach", "doParallel", "future.apply", "dplyr",
-                      "stringr", "purrr", "stars")
+# list_of_packages <- c("RColorBrewer", "readr", "haven", "data.table", "reshape",
+#                       "ggplot2", "labelled", "tidyverse", "janitor", "terra",
+#                       "readxl", "mapsf", "survey","srvyr", "plotly", "hdf5r",
+#                       "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", "ggpubr", "viridis", "patchwork", 
+#                       "raster", "wordcloud", "ggwordcloud", "terra", "plotly",
+#                       "gridExtra", "grid", "openxlsx", "officer", "magrittr", "mclust",
+#                       "foot", "units", "tidyr", "foreach", "doParallel", "future.apply", "dplyr",
+#                       "stringr", "purrr", "stars")
+# 
+# read_install_pacakges <- function(packages = list_of_packages
+# ){
+#   new_packages <- packages[!(list_of_packages %in% installed.packages()[,"Package"])]
+#   if(length(new.packages)) install.packages(new_packages)
+#   return(sapply(list_of_packages, require, character.only = TRUE))
+# }
+# 
+# read_install_pacakges()
 
-read_install_pacakges <- function(packages = list_of_packages
-){
-  new_packages <- packages[!(list_of_packages %in% installed.packages()[,"Package"])]
-  if(length(new.packages)) install.packages(new_packages)
-  return(sapply(list_of_packages, require, character.only = TRUE))
+# was getting error about new_packages being empty, here is new code that avoids it:
+list_of_packages <- c(
+  "RColorBrewer", "readr", "haven", "data.table", "reshape",
+  "ggplot2", "labelled", "tidyverse", "janitor", "terra",
+  "readxl", "mapsf", "survey", "srvyr", "plotly", "hdf5r",
+  "broom", "ggthemes", "ggrepel", "sjlabelled", "sf", "ggpubr", "viridis", "patchwork",
+  "raster", "wordcloud", "ggwordcloud", "plotly", "gridExtra", "grid",
+  "openxlsx", "officer", "magrittr", "mclust", "foot", "units", "tidyr",
+  "foreach", "doParallel", "future.apply", "dplyr", "stringr", "purrr", "stars", "tictoc"
+)
+
+read_install_packages <- function(packages = list_of_packages) {
+  new_packages <- packages[!(packages %in% installed.packages()[, "Package"])]
+  
+  # Install new packages if any
+  if (length(new_packages) > 0) {
+    install.packages(new_packages)
+  } else {
+    message("All packages are already installed.")
+  }
+  
+  # Load all required packages
+  return(sapply(packages, require, character.only = TRUE))
 }
 
-read_install_pacakges()
+# Run the function
+read_install_packages()
 
 #custom functions
 
@@ -116,5 +144,3 @@ get_model_results <- function(data) {
     )
   bind_rows(adjusted_results, unadjusted_net_own_results, unadjusted_net_use_results)
 }
-
-source("~/NMEP_classification/15_extraction_function.R", echo = T)
