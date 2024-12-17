@@ -1,0 +1,179 @@
+X,WardName,urbanPercentage,classification_20,classification_30,classification_50,classification_75
+1,Afunori,0,Rural,Rural,Rural,Rural
+2,Alagarno,0,Rural,Rural,Rural,Rural
+3,Asheikri,3.28439634967861,Rural,Rural,Rural,Rural
+4,Babbangida,0,Rural,Rural,Rural,Rural
+5,Balle,0,Rural,Rural,Rural,Rural
+6,Bara,0,Rural,Rural,Rural,Rural
+7,Bare Bari,0.376905639083433,Rural,Rural,Rural,Rural
+8,Bayamari,0,Rural,Rural,Rural,Rural
+9,Bilal Jawa,0.701582590508457,Rural,Rural,Rural,Rural
+10,Bindigari Pawari,11.046269410698,Rural,Rural,Rural,Rural
+11,Biriri,0.066192043807942,Rural,Rural,Rural,Rural
+12,Bogo,0.603096330879657,Rural,Rural,Rural,Rural
+13,Bolewa A,99.6715004341066,Urban,Urban,Urban,Urban
+14,Bolewa B,81.7064246274017,Urban,Urban,Urban,Urban
+15,Borko,0,Rural,Rural,Rural,Rural
+16,Borno Kiji,0.290250055529867,Rural,Rural,Rural,Rural
+17,Buduwa,0.297702397975282,Rural,Rural,Rural,Rural
+18,Bulabulin,22.4029884964814,Urban,Rural,Rural,Rural
+19,Bulanguwa,0,Rural,Rural,Rural,Rural
+20,Bularafa,0,Rural,Rural,Rural,Rural
+21,Bulatura,0,Rural,Rural,Rural,Rural
+22,Bultuwa,0,Rural,Rural,Rural,Rural
+23,Bumsa,0,Rural,Rural,Rural,Rural
+24,Buni Gari,0.111481601326874,Rural,Rural,Rural,Rural
+25,Buni Yadi,1.79867863056442,Rural,Rural,Rural,Rural
+26,Chillariye,0,Rural,Rural,Rural,Rural
+27,Chukuriwa,0,Rural,Rural,Rural,Rural
+28,Dabule,0,Rural,Rural,Rural,Rural
+29,Dadingel,0,Rural,Rural,Rural,Rural
+30,Dagona,0,Rural,Rural,Rural,Rural
+31,Damagum A,9.69765147761246,Rural,Rural,Rural,Rural
+32,Damagum B,0,Rural,Rural,Rural,Rural
+33,Damai,0.522248454309246,Rural,Rural,Rural,Rural
+34,Damakasu,0,Rural,Rural,Rural,Rural
+35,Damaturu Central,10.4870861966378,Rural,Rural,Rural,Rural
+36,Danani Lawanti,0,Rural,Rural,Rural,Rural
+37,Danchuwa,30.739795659588,Urban,Urban,Rural,Rural
+38,Dapchi,0,Rural,Rural,Rural,Rural
+39,Darin Langawa,0,Rural,Rural,Rural,Rural
+40,Daura A,0,Rural,Rural,Rural,Rural
+41,Daura B,0.179610668198514,Rural,Rural,Rural,Rural
+42,Dawasa,1.38276294701122,Rural,Rural,Rural,Rural
+43,Dawayo,0,Rural,Rural,Rural,Rural
+44,Dazigau,0,Rural,Rural,Rural,Rural
+45,Degeltura,0,Rural,Rural,Rural,Rural
+46,Degubi,0,Rural,Rural,Rural,Rural
+47,Dekwa,0,Rural,Rural,Rural,Rural
+48,Dilala/Kalgi,0,Rural,Rural,Rural,Rural
+49,Dogo Tebo,29.7722963788484,Urban,Rural,Rural,Rural
+50,Dogon Nini,67.2211311229533,Urban,Urban,Urban,Rural
+51,Dokshi,0,Rural,Rural,Rural,Rural
+52,Dole,0.6633780232699,Rural,Rural,Rural,Rural
+53,Duddaye,0.267646972936685,Rural,Rural,Rural,Rural
+54,Dumbari,0,Rural,Rural,Rural,Rural
+55,Dumsai,0,Rural,Rural,Rural,Rural
+56,Fajiganari,0,Rural,Rural,Rural,Rural
+57,Falimaram,0.793902588758761,Rural,Rural,Rural,Rural
+58,Fika Anze,0,Rural,Rural,Rural,Rural
+59,Fukurti,0,Rural,Rural,Rural,Rural
+60,Futchimiram,0,Rural,Rural,Rural,Rural
+61,Gabai,0,Rural,Rural,Rural,Rural
+62,Gadaka/She,0.49164486982641,Rural,Rural,Rural,Rural
+63,Gagure,0,Rural,Rural,Rural,Rural
+64,Gambir Moduri,0,Rural,Rural,Rural,Rural
+65,Garin Gawo,0,Rural,Rural,Rural,Rural
+66,Garin Tuwo,0,Rural,Rural,Rural,Rural
+67,Garu,0,Rural,Rural,Rural,Rural
+68,Gasma,0,Rural,Rural,Rural,Rural
+69,Girgir/Bayam,0,Rural,Rural,Rural,Rural
+70,Goduram,0,Rural,Rural,Rural,Rural
+71,Gogaram,0,Rural,Rural,Rural,Rural
+72,Goneri,3.36764608786138,Rural,Rural,Rural,Rural
+73,Gotala Gotumba,0,Rural,Rural,Rural,Rural
+74,Guba Dapso,0,Rural,Rural,Rural,Rural
+75,Gudi/Dozi,0.238441157988664,Rural,Rural,Rural,Rural
+76,Gujba,0,Rural,Rural,Rural,Rural
+77,Guji Metalari,0,Rural,Rural,Rural,Rural
+78,Gulani,0,Rural,Rural,Rural,Rural
+79,Gumsa,0,Rural,Rural,Rural,Rural
+80,Gumshi,0,Rural,Rural,Rural,Rural
+81,Guya,0,Rural,Rural,Rural,Rural
+82,Gwio-Kura,0,Rural,Rural,Rural,Rural
+83,Hausari,18.4015082233963,Rural,Rural,Rural,Rural
+85,Hausari,95.4674486804321,Urban,Urban,Urban,Urban
+87,Hausawa Asibiti,20.1838433712616,Urban,Rural,Rural,Rural
+88,Jaba,0.304295485315424,Rural,Rural,Rural,Rural
+89,Jajere,0.212226760868664,Rural,Rural,Rural,Rural
+90,Jajeri,0,Rural,Rural,Rural,Rural
+91,Jaji Maji,0,Rural,Rural,Rural,Rural
+92,Jakusko,0,Rural,Rural,Rural,Rural
+93,Janga,0,Rural,Rural,Rural,Rural
+94,Jawa Garun Dole,0,Rural,Rural,Rural,Rural
+95,Jawur/Katamma,0,Rural,Rural,Rural,Rural
+96,Jebuwa,0,Rural,Rural,Rural,Rural
+97,Jororo,0,Rural,Rural,Rural,Rural
+98,Juluri Damnawa,0,Rural,Rural,Rural,Rural
+99,Jumbam,0,Rural,Rural,Rural,Rural
+100,Kafiya,0,Rural,Rural,Rural,Rural
+101,Kalallawa Gabai,0,Rural,Rural,Rural,Rural
+102,Kaliyari,0,Rural,Rural,Rural,Rural
+103,Karasuwa Galu,0,Rural,Rural,Rural,Rural
+104,Karausuwa Garin Guna,0,Rural,Rural,Rural,Rural
+105,Katuzu,12.9682550576698,Rural,Rural,Rural,Rural
+106,Kayeri,0.237903197352156,Rural,Rural,Rural,Rural
+107,Kollere Kafaje,0.0762581087565145,Rural,Rural,Rural,Rural
+108,Kolori,0.303534243282886,Rural,Rural,Rural,Rural
+109,Konkomma,0,Rural,Rural,Rural,Rural
+110,Koriyel,0,Rural,Rural,Rural,Rural
+111,Kukareta Warsala,0,Rural,Rural,Rural,Rural
+112,Kukayasku,0,Rural,Rural,Rural,Rural
+113,Kukuri,1.10929914942451,Rural,Rural,Rural,Rural
+114,Kumaganam,0,Rural,Rural,Rural,Rural
+115,Kurnawa,0,Rural,Rural,Rural,Rural
+116,Kushimaga,0,Rural,Rural,Rural,Rural
+117,Kusur,0,Rural,Rural,Rural,Rural
+118,Lafiya Loiloi,0,Rural,Rural,Rural,Rural
+119,Lamisu,0,Rural,Rural,Rural,Rural
+120,Lantewa,0,Rural,Rural,Rural,Rural
+121,Lawan Fannami,52.4299683271223,Urban,Urban,Urban,Rural
+122,Lawan Musa,3.30445804220337,Rural,Rural,Rural,Rural
+123,Ma'anna,0,Rural,Rural,Rural,Rural
+124,Machina,0.967890981268523,Rural,Rural,Rural,Rural
+125,Mafa,0,Rural,Rural,Rural,Rural
+126,Maimalari,0,Rural,Rural,Rural,Rural
+127,Mairari,0,Rural,Rural,Rural,Rural
+128,Maisandari/Waziri Ibrahim,0.0722213860388227,Rural,Rural,Rural,Rural
+129,Maja Kura,0,Rural,Rural,Rural,Rural
+130,Mallumdunari,0,Rural,Rural,Rural,Rural
+131,Mamudo,0,Rural,Rural,Rural,Rural
+132,Manda-Dawa,0,Rural,Rural,Rural,Rural
+133,Marmari Gudugurka,0.199003595657626,Rural,Rural,Rural,Rural
+134,Masaba,0,Rural,Rural,Rural,Rural
+135,Mashio,0,Rural,Rural,Rural,Rural
+136,Maskandare,0.663481724676145,Rural,Rural,Rural,Rural
+137,Mayori,0,Rural,Rural,Rural,Rural
+138,Mozogun,0.118820252816061,Rural,Rural,Rural,Rural
+139,Mubi/Fusami,0.77105799399089,Rural,Rural,Rural,Rural
+140,Muguram,0.40414845935088,Rural,Rural,Rural,Rural
+141,Murfakalam,0,Rural,Rural,Rural,Rural
+142,Mutai,0,Rural,Rural,Rural,Rural
+143,Nangere,0.335983439927175,Rural,Rural,Rural,Rural
+144,Nayinawa,12.0458195900785,Rural,Rural,Rural,Rural
+145,Ngalda/Dumb,0,Rural,Rural,Rural,Rural
+146,Ngarbi,6.33953125576489,Rural,Rural,Rural,Rural
+147,Ngelzarma A,0.245211467613631,Rural,Rural,Rural,Rural
+148,Ngelzarma B,0,Rural,Rural,Rural,Rural
+149,Ngilewa,15.7914914129291,Rural,Rural,Rural,Rural
+150,Ngojin Alaraba,0,Rural,Rural,Rural,Rural
+151,Ngurbuwa,0,Rural,Rural,Rural,Rural
+152,Njibulwa,0,Rural,Rural,Rural,Rural
+153,Njiwaji/Gwange,16.519284440908802,Rural,Rural,Rural,Rural
+154,Ruhu,0,Rural,Rural,Rural,Rural
+155,S G Kanuri,21.5560608584981,Urban,Rural,Rural,Rural
+156,Sabon Gari,19.015124082481,Rural,Rural,Rural,Rural
+157,Sarkin Hausawa,5.44960352597198,Rural,Rural,Rural,Rural
+158,Sasawa/Kabaru,0,Rural,Rural,Rural,Rural
+159,Shekau,0,Rural,Rural,Rural,Rural
+160,Shoye,0.805941440887869,Rural,Rural,Rural,Rural
+161,Sugum Tagali,0,Rural,Rural,Rural,Rural
+162,Sumbar,0,Rural,Rural,Rural,Rural
+163,Sungul Koka,0,Rural,Rural,Rural,Rural
+164,Taganama,0,Rural,Rural,Rural,Rural
+165,Tetteba,0,Rural,Rural,Rural,Rural
+166,Tikau,0.68060268154783,Rural,Rural,Rural,Rural
+167,Toshia,0,Rural,Rural,Rural,Rural
+168,Tulotulo,0,Rural,Rural,Rural,Rural
+169,Turmi Malori,0,Rural,Rural,Rural,Rural
+170,Wachakal,0,Rural,Rural,Rural,Rural
+171,Wagir,0,Rural,Rural,Rural,Rural
+172,Waro,0,Rural,Rural,Rural,Rural
+173,Watinani,0,Rural,Rural,Rural,Rural
+174,Yerimaram,2.90413631481876,Rural,Rural,Rural,Rural
+175,Yunusari,0,Rural,Rural,Rural,Rural
+176,Yusufari,0,Rural,Rural,Rural,Rural
+177,Zabudum/Dachia,0,Rural,Rural,Rural,Rural
+178,Zajibiriri/Dumbol,0,Rural,Rural,Rural,Rural
+179,Zangaya Mazawaun,0,Rural,Rural,Rural,Rural
+180,Zango,2.65853476044275,Rural,Rural,Rural,Rural
