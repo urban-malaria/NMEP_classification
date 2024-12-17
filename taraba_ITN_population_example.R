@@ -1,14 +1,14 @@
 ### PRIORITZED AREAS
 
-#source("~/NMEP_classification/load_path.R")
+source("load_path.R")
+source("pop_estimate_function.R")
 
 library(patchwork)
 
 #Yobe
 
-# StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
-# 
-  Taraba_shp <- st_read(file.path(StateShpDir,"Taraba", "Taraba_State.shp"))
+StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
+Taraba_shp <- st_read(file.path(StateShpDir,"Taraba", "Taraba_State.shp"))
 # 
 # pathLGA <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/Nigeria LGAs shapefile (260216)"
 # 
