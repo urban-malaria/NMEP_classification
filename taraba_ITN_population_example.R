@@ -117,6 +117,10 @@ p<- ggplot()+
   labs(title = "Risk Map in Taraba State") +
   map_theme()
 
+FigDir <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/Shiny App/NMEP Presentation Risk Maps/Taraba/deprioritization_scenarios"
+
+ggsave(paste0(FigDir,"/", Sys.Date(),"_Taraba_risk_map.pdf"), p, width = 13, height = 14)
+
 ######################## 20%
 combined_plot2 <- Taraba_shp %>% 
   left_join(prioritized_taraba1, by = c("WardName" = "SelectedWards")) %>% 
