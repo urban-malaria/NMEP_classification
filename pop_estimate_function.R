@@ -1,5 +1,3 @@
-## PRIORITIZE WARDS AND POPULATION ESTIMATE FUNCTION
-
 prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col, target_percentage = 30) {
   total_population <- sum(data[[population_col]], na.rm = TRUE)
   
