@@ -176,12 +176,17 @@ ggplot(data = combined_plot2) +
 ### KATSINA
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 
+# set file paths
 StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
+ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
 
-katsina_shp <- st_read(file.path(StateShpDir,"Katsina", "Katsina_State.shp"))
+# load shapefile
+katsina_shp <- st_read(file.path(StateShpDir, "Katsina", "Katsina_State.shp"))
 
+# load and clean variables
 katsina_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "katsina_plus.csv")) %>% 
-  dplyr::select(X, WardName.x, urbanPercentage) %>% 
+  distinct(WardCode, .keep_all = TRUE) %>%
+  dplyr::select(X, WardName.x, urbanPercentage, WardCode) %>% 
   mutate(
     classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
     classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
@@ -189,17 +194,14 @@ katsina_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "katsin
     classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
   )
 
+# read in rankings
+katsina_ranks <- read.csv(file.path(OutputsDir, "rankings", "Katsina_rankings.csv")) %>%
+  dplyr::mutate(WardName = str_trim(WardName), ranks = str_trim(ranks))
 
-katsina_ranks <- read.csv(file.path(OutputsDir, "rankings/Katsina_rankings.csv")) %>% 
-  dplyr::select(WardName, rank)
-katsina_ranks$Ward <- str_trim(katsina_ranks$WardName)
-katsina_ranks$Rank <- str_trim(katsina_ranks$rank)
+# read in ITN data
+katsina_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Katsina.xlsx"))
 
-
-ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
-katsina_itn_data <- readxl::read_excel(
-  file.path(ITNDir, "pbi_distribution_Katsina.xlsx"))
-
+# clean ITN data
 katsina_itn_clean <- katsina_itn_data %>% 
   rename(population = N_FamilyMembers,
          Ward = AdminLevel3) %>% 
@@ -291,44 +293,44 @@ katsina_itn_clean <- katsina_itn_data %>%
     Ward == "Urhuovie" ~	"Urhuovie/Abraka  II",
     TRUE ~ Ward))
 
-
-combined_wards <- left_join(katsina_variables, katsina_ranks, by = c("WardName.x" = "Ward"))
-
+# combine datasets
+combined_wards <- left_join(katsina_variables, katsina_ranks, by = "WardCode")
 combined_wards2 <- left_join(combined_wards, katsina_itn_clean, by = c("WardName.x" = "Ward")) 
 
+# run reprioritization function (from pop_estimate_function.R)
 prioritized_katsina1 <- prioritize_wards(data = combined_wards2, 
                                          population_col = "Population", 
-                                         rank_col = "Rank", 
+                                         rank_col = "ranks", 
                                          class_col = "classification_20", 
-                                         ward_col = "WardName", 
-                                         target_percentage = 30) 
-
-prioritized_katsina2 <- prioritize_wards(data = combined_wards2, 
-                                         population_col = "Population", 
-                                         rank_col = "Rank", 
-                                         class_col = "classification_30", 
                                          ward_col = "WardName", 
                                          target_percentage = 30) 
 
 # save reprioritization table
 write.csv(prioritized_katsina1, file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", "katsina_scenario1.csv"))
 
-combined_plot <- katsina_shp %>% 
-  left_join(combined_wards2, by = "WardName")
-combined_plot$Rank <- as.numeric(as.character(combined_plot$Rank))
+# convert shapefile wardcode var to integer to match type of combined_wards wardcode var
+katsina_shp$WardCode <- as.numeric(katsina_shp$WardCode)
 
+# final join with shapefile for mapping
+combined_plot <- katsina_shp %>%
+  left_join(combined_wards2, by = "WardCode")
 
+# make ranks var numeric for plotting
+combined_plot$ranks <- as.numeric(combined_plot$ranks)
+
+# create risk map
 katsina_risk_map <- ggplot()+
-  geom_sf(data = combined_plot, aes(geometry = geometry, fill = Rank))+
+  geom_sf(data = combined_plot, aes(geometry = geometry, fill = ranks))+
   scale_fill_gradient(na.value = "grey") +
-  labs(title = "Risk Map in Katsina State") +
+  labs(title = "Risk Map in Katsina State")
 katsina_risk_map
 
+# make df with data from reprioritization function
 combined_plot2 <- katsina_shp %>% 
   left_join(prioritized_katsina1, by = c("WardName" = "SelectedWards")) %>% 
   mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
 
-
+# create reprioritization map
 katsina_reprioritization_map <- ggplot(data = combined_plot2) +
   geom_sf(aes(geometry = geometry, fill = status)) +
   scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
@@ -343,5 +345,3 @@ katsina_reprioritization_map
 # save plots as PDFs
 ggsave(filename = paste0(OutputsDir, "/NMEP Presentation Risk Maps/", 'katsina_risk.pdf'), plot = katsina_risk_map, width = 6, height = 4)
 ggsave(filename = paste0(OutputsDir, "/NMEP Presentation Risk Maps/", 'katsina_reprioritization.pdf'), plot = katsina_reprioritization_map, width = 12, height = 8)
-
-
