@@ -3,6 +3,10 @@ rm(list = ls())
 source("~/NMEP_classification/load_path.R", echo = T)
 
 KanoFieldData <- file.path(FieldDataDir, "241106_Kano_latest_data")
+KanoDry <- file.path(FieldDataDir, "Kano Dry Season Data_latest_Nov2024",
+                     "Kano dry season survey data")
+
+kano_data_dry<- read_dta(file.path(KanoDry, "long_dryseason_household_membersV00.dta"))
 
 ####################################################################################
 ## Manipulate column did you sleep under nets
@@ -265,3 +269,27 @@ ggplot()+
   map_theme()
 
 st_write(combined_shp, file.path(ShpfilesDir, "Kano_Ibadan", "Kano-Ibadan.shp", append = T))
+
+
+
+########################## Calculate combined wet and dry season TPR####################
+
+kano_data_dry_cols <- kano_data_dry %>% 
+  dplyr::select(sn, hl1, Ward, bi3, q301, q302, ea_name_new, hhs_weights)
+
+
+kano_data_wet_cols <- kano_data_full %>% 
+  dplyr::select(sn, hl1, Ward, )
+
+### weighted
+design <- svydesign(
+  id = ~sn + ea,
+  strata = ~Ward + settlement_type,
+  weights = ~hh_weight,
+  data = kano_data_clean,
+  nest = T
+)
+
+#prevalence
+weighted_ward_tpr_kn <- svyby(~malaria_positive, ~Ward, design,
+                              svymean, na.rm = T)

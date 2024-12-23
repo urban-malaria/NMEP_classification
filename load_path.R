@@ -11,6 +11,11 @@ DataDir <- file.path(DriveDir, "data")
 
 ShpfilesDir <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles")
 ShpfilesDir2 <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/NMEP Net Distribution States Shapefiles for ADM3 - 13 States")
+StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
+
+ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
+ITNDir2 <- file.path(DataDir, "nigeria/ITN_distribution/household_member_ward_summaries_Itn_distribution")
+
 
 GriddedWardsDir <- file.path(ShpfilesDir, "gridded")
 RastersDir <- file.path(DriveDir, "data/nigeria/Raster_files")

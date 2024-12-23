@@ -255,6 +255,27 @@ ggplot()+
   map_theme()
 
 
+#### PLOT TPR IN HEALTH FACILITIES IB
+
+###########CHECK BEFORE PUSHING
+facilities_tpr_map <- 
+  ggplot() +
+  geom_sf(data = all_ward_facilities %>% 
+            filter(WardName == "Agugu"| WardName == "Bashorun"| WardName == "Challenge" | WardName == "Olopomewa"), 
+          aes(geometry =  geometry, fill = u5_tpr2), color = "white") +
+  scale_fill_manual(values = agric_palette, labels = interval_labels, na.value = "gray") +
+  geom_sf(data = ib_shp, aes(geometry = geometry), fill = NA, color = "black") +  
+  coord_sf(xlim = xlim_range, ylim = ylim_range, datum = NA) +
+  theme_void() +
+  labs(title = ""),
+       fill = "") +
+  theme(axis.text = element_blank(), axis.ticks = element_blank(), axis.title = element_blank()) +
+  map_theme()
+
+
+
+
+
 ##save
 
 kano_ibadan_wards <- read.csv(file.path(OutputsDir,"NMEP Malaria Risk Scores", "kano_ibadan_wards.csv"))
@@ -310,4 +331,3 @@ hmis_2020_kn_ib <- hmis_2020 %>%
   
   
 
-## MERGE 3 DATA SETS FOR KANO AND IBADAN
