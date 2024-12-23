@@ -12,25 +12,22 @@ Taraba_shp <- st_read(file.path(StateShpDir,"Taraba", "Taraba_State.shp"))
  
 pathLGA <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/Nigeria LGAs shapefile (260216)"
 
-Taraba_lGAshp <- st_read(file.path(pathLGA, "NGA_LGAs.shp"))
+lGAshp <- st_read(file.path(pathLGA, "NGA_LGAs.shp"))
 
 # sf_use_s2(FALSE)
 # 
 # lga_ward <- st_intersection( Taraba_shp, Taraba_lGAshp)
 # 
 # 
-Taraba_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Taraba_plus.csv")) %>%
-  distinct(WardCode, .keep_all = TRUE) %>%
-  dplyr::select(X, WardName, urbanPercentage, WardCode) %>%
-  mutate(
-    classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
-    classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
-    classification_50 = ifelse(urbanPercentage > 50, "Urban", "Rural"),
-    classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
-  )
-
-# class50T <- Taraba_variables %>%  filter(classification_50== "Urban") 
-# class75T <- Taraba_variables %>%  filter(classification_75== "Urban") 
+# Taraba_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Taraba_plus.csv")) %>% 
+#   distinct(WardCode, .keep_all = TRUE) %>%
+#   dplyr::select(X, WardName, urbanPercentage, WardCode) %>% 
+#   mutate(
+#     classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
+#     classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
+#     classification_50 = ifelse(urbanPercentage > 50, "Urban", "Rural"),
+#     classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
+#   ) 
 # 
 # 
 Taraba_ranks <- read.csv(file.path(OutputsDir, "rankings", "Taraba_rankings.csv")) 
@@ -166,12 +163,12 @@ combined_plot2 <- Taraba_shp %>%
 combined_plot3 <-combined_plot2 %>%  left_join(Taraba_ranks, by = "WardCode") %>%  filter(status == "Reprioritized") %>%  
   mutate(new_rank = rank(ranks))
 
-p3<- ggplot(data = filter(Taraba_lGAshp, State == "Taraba")) +
+p3<- ggplot(data = filter(lGAshp, State == "Taraba")) +
       geom_sf(fill = "red") +
   geom_sf(data = combined_plot3, aes(geometry = geometry), fill = "green") +
   # scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
   #                   name = "Status") +
-  geom_text_repel(data = filter(Taraba_lGAshp, State == "Taraba"),
+  geom_text_repel(data = filter(lGAshp, State == "Taraba"),
                   aes(label =  LGA, geometry = geometry),color ='black',
                   stat = "sf_coordinates", min.segment.length = 0, size = 3.5, force = 1, max.overlaps = Inf)+
   labs(title = "Reprioritization Scenario 3",
@@ -203,12 +200,12 @@ combined_plot3 <-combined_plot2 %>%  left_join(Taraba_ranks, by = "WardCode") %>
   mutate(new_rank = rank(ranks))
 
 
-p4<- ggplot(data = filter(Taraba_lGAshp, State == "Taraba")) +
+p4<- ggplot(data = filter(lGAshp, State == "Taraba")) +
   geom_sf(fill = "red") +
   geom_sf(data = combined_plot3, aes(geometry = geometry), fill = "green") +
   # scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
   #                   name = "Status") +
-  geom_text_repel(data = filter(Taraba_lGAshp, State == "Taraba"),
+  geom_text_repel(data = filter(lGAshp, State == "Taraba"),
                   aes(label =  LGA, geometry = geometry),color ='black',
                   stat = "sf_coordinates", min.segment.length = 0, size = 3.5, force = 1, max.overlaps = Inf)+
   labs(title = "Reprioritization Scenario 4",
@@ -243,3 +240,31 @@ ggsave(paste0(FigDir,"/", "urban_50_75", "/", Sys.Date(),"_Taraba_reprioritizati
 
 #################################################################################
 ###urban percentage 50% and 75% plots for all NMEP states
+#################################################################################
+rm(list=ls())
+source("load_path.R")
+source("pop_estimate_function.R")
+
+library(patchwork)
+
+#Yobe
+
+StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
+
+pathLGA <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/Nigeria LGAs shapefile (260216)"
+
+lGAshp <- st_read(file.path(pathLGA, "NGA_LGAs.shp"))
+
+#Yobe 
+yobe_ward_shp <- st_read(file.path(StateShpDir,"Yobe", "Yobe_State.shp"))
+yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "yobe_plus.csv")) %>% 
+  distinct(WardCode, .keep_all = TRUE) %>%
+  dplyr::select(X, WardName, urbanPercentage, WardCode) %>%
+  mutate(
+    classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
+    classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
+    classification_50 = ifelse(urbanPercentage > 50, "Urban", "Rural"),
+    classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
+  )
+yobe_ranks <- read.csv(file.path(OutputsDir, "rankings", "yobe_rankings.csv")) 
+
