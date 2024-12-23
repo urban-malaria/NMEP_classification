@@ -6,17 +6,16 @@ pathLGA <-  file.path(DriveDir, "/data/nigeria/nigeria_shapefiles/Nigeria LGAs s
 
 
 StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
+Delta_shp <- sf::st_read(file.path(StateShpDir ,"Delta", "Delta_State.shp"))
 
-Yobe_shp <- sf::st_read(file.path(StateShpDir ,"Yobe", "Yobe_State.shp"))
 
-
-Yobe_lGAshp <- sf::st_read(file.path(pathLGA, "NGA_LGAs.shp"))
+Delta_lGAshp <- sf::st_read(file.path(pathLGA, "NGA_LGAs.shp"))
 sf::sf_use_s2(FALSE)
 
-lga_ward <- sf::st_intersection( Yobe_shp, Yobe_lGAshp)
+lga_ward <- sf::st_intersection( Delta_shp, Delta_lGAshp)
 
 
-Yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Yobe_plus.csv")) %>% 
+Delta_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Delta_plus.csv")) %>% 
   distinct(WardCode, .keep_all = TRUE) %>%
   dplyr::select(X, WardName, urbanPercentage, WardCode) %>% 
   mutate(
@@ -28,23 +27,23 @@ Yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Yobe_plus
   mutate(num = 1:n())
 
 
-Yobe_ranks <- read.csv(file.path(OutputsDir, "rankings", "Yobe_rankings.csv")) 
-Yobe_ranks$WardName <- stringr::str_trim(Yobe_ranks$WardName)
-# Yobe_ranks$ranks <- stringr::str_trim(Yobe_ranks$ranks)
+Delta_ranks <- read.csv(file.path(OutputsDir, "rankings", "Delta_rankings.csv")) 
+Delta_ranks$WardName <- stringr::str_trim(Delta_ranks$WardName)
+# Delta_ranks$ranks <- stringr::str_trim(Delta_ranks$ranks)
 
-Yobe_ranks <- Yobe_ranks %>% 
+Delta_ranks <- Delta_ranks %>% 
   mutate(num = 1:n())
 
 
 ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
-Yobe_itn_data <- readxl::read_excel(
-  file.path(ITNDir, "pbi_distribution_Yobe.xlsx"), 
-  sheet = 1) 
+Delta_itn_data <- readxl::read_excel(
+  file.path(ITNDir, "pbi_distribution_Delta.xlsx"), 
+  sheet = 3) 
 
 
 
 
-Yobe_itn_clean <- Yobe_itn_data %>% 
+Delta_itn_clean <- Delta_itn_data %>% 
   rename(population = N_FamilyMembers,
          Ward = AdminLevel3) %>% 
   dplyr::select(population, Ward) %>% 
@@ -55,9 +54,9 @@ Yobe_itn_clean <- Yobe_itn_data %>%
 
 
 
-combined_wards <- left_join(Yobe_variables, Yobe_ranks , by = c("WardCode" = "WardCode"))
+combined_wards <- left_join(Delta_variables, Delta_ranks , by = c("WardCode" = "WardCode"))
 
-combined_wards2 <- left_join(combined_wards, Yobe_itn_clean, by = c("WardName.x" = "Ward")) 
+combined_wards2 <- left_join(combined_wards, Delta_itn_clean, by = c("WardName.x" = "Ward")) 
 
 
 
@@ -65,23 +64,23 @@ colums <- c("classification_20", "classification_30", "classification_50", "clas
 
 
 plots <- list()
-prioritized_Yobe <- list()
+prioritized_Delta <- list()
 
 for (ii in seq_along(colums)){
   
   
-  prioritized_Yobe[[ii]] <- prioritize_wards(data = combined_wards2, 
-                                               population_col = "Population", 
-                                               rank_col = "ranks", 
-                                               class_col = colums[ii], 
-                                               ward_col = "WardName.x", 
-                                               target_percentage = 30) 
+  prioritized_Delta[[ii]] <- prioritize_wards(data = combined_wards2, 
+                                             population_col = "Population", 
+                                             rank_col = "ranks", 
+                                             class_col = colums[ii], 
+                                             ward_col = "WardName.x", 
+                                             target_percentage = 30) 
   
-  write.csv(prioritized_Yobe[[ii]], file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
-                                              "Yobe", paste0("yobe_scenario_", ii, ".csv")))
+  write.csv(prioritized_Delta[[ii]], file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
+                                              "Delta", paste0("Delta_scenario_", ii, ".csv")))
   
-  combined_plot2 <- Yobe_shp %>% 
-    left_join(prioritized_Yobe[[ii]], by = c("WardName" = "SelectedWards")) %>% 
+  combined_plot2 <- Delta_shp %>% 
+    left_join(prioritized_Delta[[ii]], by = c("WardName" = "SelectedWards")) %>% 
     mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
   
   
@@ -107,4 +106,4 @@ for (ii in seq_along(colums)){
 # 
 # FigDir <- file.path(DriveDir,"/projects/urban_microstratification/Shiny App/Plots/deprioritization_scenarios")
 # 
-# ggsave(paste0(FigDir,"/", Sys.Date(),"_Yobe_reprioritization_scenarios.pdf"), p_all, width = 13, height = 14)
+# ggsave(paste0(FigDir,"/", Sys.Date(),"_Delta_reprioritization_scenarios.pdf"), p_all, width = 13, height = 14)
