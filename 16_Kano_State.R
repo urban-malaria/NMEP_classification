@@ -1,6 +1,11 @@
 ## Kano State
 
-source("~/NMEP_classification/load_path.R", echo = T)
+user <- Sys.getenv("USER")
+if ("grace" %in% user) {
+  source("load_path.R", echo = TRUE)
+} else {
+  source("~/NMEP_classification/load_path.R", echo = T) # if get a new_packages error, run this a couple more times and it will work
+}  
 
 library(foot)
 library(units)
@@ -24,7 +29,6 @@ NDMI_raster <- raster(file.path(RastersDir, "global_surface_water", "NDMI_Nigeri
 NDMI_extracted <- raster::extract(NDMI_raster, kano_5_shp, fun = mean, df = TRUE) #average of 0.
 
 kano_5_shp$NDWI <- NDWI_extracted$NDWI
-
 
 # Extract variables for Kano metropolitan household points
 
@@ -124,7 +128,6 @@ st_write(combined_points, file.path(ShpfilesDir, "combined_kano_points",
                                    "combined_points.shp"))
 
 
-
 # Extract only intersecting polygons
 #combined_points_fp <- st_intersection(kano_fp, combined_points)
 #combined_polygons <- combined_points[st_intersects(kano_fp, combined_points, sparse = FALSE)[, 1], ]
@@ -177,22 +180,38 @@ kano_prediction_variables <- extract_variables2(
 )
 
 
+## =========================================================================================================================================
+### Run Extraction Function for Remaining States
+## =========================================================================================================================================
 
+# Extract variables for all Kaduna State Wards
+kaduna_state_variables <- extract_variables(
+  name = "Kaduna",
+  State = "Kaduna",
+  shapefile = file.path(ShpfilesDir, "all_reprioritization_nmep_states", "Kaduna", "kaduna_ward_default.shp"),
+  paths = paths
+)
 
+# Extract variables for all Katsina State Wards
+katsina_state_variables <- extract_variables(
+  name = "Katsina",
+  State = "Katsina",
+  shapefile = file.path(ShpfilesDir, "all_reprioritization_nmep_states", "Katsina", "Katsina.shp"),
+  paths = paths
+)
 
+# Extract variables for all Niger State Wards
+niger_state_variables <- extract_variables(
+  name = "Niger",
+  State = "Niger",
+  shapefile = file.path(ShpfilesDir, "all_reprioritization_nmep_states", "Niger", "Niger_ward_default.shp"),
+  paths = paths
+)
 
-
-
-
-# what =list(list("area"), list("perimeter"), list("compact"), list("angle"), list("shape"), list("settled"), list("nndist")), 
-# how =list(list("mean","median","sd", "max", "min", "cv", "sum", "iqr"), 
-#           list("mean","median","sd", "max", "min", "cv", "sum", "iqr"), 
-#           list("mean","median","sd", "max", "min", "cv", "iqr"), 
-#           list("mean","median","sd", "max", "min", "cv", "entropy", "iqr"), 
-#           list("mean","median","sd", "max", "min", "cv", "iqr"), 
-#           list("binary", "count"), 
-#           list("mean","median","sd", "max", "min", "cv", "nnindex", "iqr")),
-# controlZone = list(zoneName = "FID", 
-#                    method = "centroid"), verbose = F)
-
-
+# Extract variables for all Delta State Wards
+delta_state_variables <- extract_variables(
+  name = "Delta",
+  State = "Delta",
+  shapefile = file.path(ShpfilesDir, "all_reprioritization_nmep_states", "Delta", "Delta_Wards.shp"),
+  paths = paths
+)
