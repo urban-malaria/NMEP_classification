@@ -7,6 +7,7 @@ prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col
   cumulative_population <- 0
   ward_populations <- c()
   ward_percentages <- c()
+  WardCode <- c()
   
   data_sorted <- data[!is.na(data[[population_col]]) & !is.na(data[[rank_col]]), ]
   data_sorted <- data_sorted[order(data_sorted[[rank_col]]), ]
@@ -22,6 +23,7 @@ prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col
     ward_population <- ward[[population_col]]
     cumulative_population <- cumulative_population + ward_population
     current_percentage <- (ward_population / total_population) * 100
+    WardCode <- c(WardCode, ward$WardCode)
     
     ward_populations <- c(ward_populations, ward_population)
     ward_percentages <- c(ward_percentages, round(current_percentage, 2))
@@ -33,6 +35,7 @@ prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col
   
   result <- data.frame(
     SelectedWards = selected_wards,
+    WardCode = WardCode,
     WardPopulation = ward_populations,
     WardPercentage = ward_percentages,
     CumulativePopulation = cumsum(ward_populations),
