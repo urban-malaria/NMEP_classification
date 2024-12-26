@@ -1,7 +1,7 @@
 ### PRIORITZED AREAS
 
-source("~/NMEP_classification/load_path.R")
-
+source("load_path.R")
+source("pop_estimate_function.R", echo=F)
 
 #Kano
 
@@ -15,6 +15,10 @@ Kano_shpefile <- sf::st_read("C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_ma
   dplyr::filter(StateCode == "KN")
 
 Kano_LGA <- st_read("C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/kano_ibadan/kano_ibadan_shape_files/Kano_metro_sixLGA_shapes/Kano_metro_sixLGA_shapes.shp")
+
+#extract <- read.csv(file.path(StateShpDir, "Kano_plus.csv")) 
+
+#Kano_variables <- inner_join(Kano_shpefile, extract, by=c("WardCode") )
 
 Kano_variables <- inner_join(Kano_shpefile, read.csv(file.path(OutputsDir, "Final Extractions", "Kano_plus.csv")), 
                              by = c("WardCode" = "WardCode", "WardName" = "WardName")) %>% 
@@ -102,7 +106,7 @@ priorite_50 <- Kano_shp  %>%  left_join(ward_50, by = c("WardCode")) %>%  filter
 
 
 p_50<- ggplot(data = Kano_LGA) +
-  geom_sf(aes(fill =LGAName)) +
+  geom_sf(aes(color =LGAName)) +
   geom_sf(data = priorite_50, aes(geometry = geometry), fill = "green") +
   # scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
   #                   name = "Status") +
@@ -129,7 +133,7 @@ p50_all = p_50 + p3_ward
 FigDir <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/Shiny App/NMEP Presentation Risk Maps"
 ggsave(paste0(FigDir,"/", "urban_50_75", "/", Sys.Date(),"_Kano_reprioritization_scenarios_50.pdf"), p50_all, width = 13, height = 14)
 
-
+##### 75
 ward_75 <- read.csv(file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
                               "Kano_metropolis", paste0("kano_scenario_4", ".csv"))) %>%  left_join(Kano_ranks, by = c("SelectedWards" = "WardName"))
 priorite_75 <- Kano_shp  %>%  left_join(ward_75, by = c("WardCode")) %>%  filter(!is.na(WardPopulation)) %>% 
@@ -137,7 +141,7 @@ priorite_75 <- Kano_shp  %>%  left_join(ward_75, by = c("WardCode")) %>%  filter
 
 
 p_75<- ggplot(data = Kano_LGA) +
-  geom_sf(aes(fill =LGAName)) +
+  geom_sf(aes(color =LGAName)) +
   geom_sf(data = priorite_75, aes(geometry = geometry), fill = "green") +
   # scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
   #                   name = "Status") +
@@ -163,6 +167,34 @@ p4_ward = ggplot()+
 p75_all = p_75 + p4_ward
 FigDir <- "C:/Users/ozodi/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/Shiny App/NMEP Presentation Risk Maps"
 ggsave(paste0(FigDir,"/", "urban_50_75", "/", Sys.Date(),"_Kano_reprioritization_scenarios_75.pdf"), p75_all, width = 13, height = 14)
+
+############seperate 75% maps 
+
+LGA <- c("Tarauni" , "Gwale", "Dala", "Fagge", "Nassarawa", "Kano Municipal")
+LGAcode <- c("20001", "20012", "20024", "20030", "20037", "20043")
+plots <- list()
+for (x in seq_along(LGA)){
+  
+  plots[[x]]<- ggplot(data = filter(Kano_LGA, LGAName == sym(LGA[[x]]))) +
+    geom_sf(aes(color =LGAName)) +
+    geom_sf(data = filter(priorite_75, LGACode == sym(LGAcode[[x]])), aes(geometry = geometry), fill = "green") +
+    # scale_fill_manual(values = c("Not Reprioritized" = "red", "Reprioritized" = "green"),
+    #                   name = "Status") +
+    geom_text_repel(data = filter(priorite_75, LGACode == sym(LGAcode[[x]])),
+                    aes(label =  wardname, geometry = geometry),color ='black',
+                    stat = "sf_coordinates", min.segment.length = 0, size = 3.5, force = 1, max.overlaps = Inf)+
+    labs(title = "Reprioritization Scenario 4",
+         caption = "conditions: 1. composite scores from EVI, u5_tpr, distance to water bodies, settlement type, and flood intensity, 
+       2. Have at least 75% urban area")+
+    map_theme() +
+    xlab("")+
+    ylab("")
+
+}
+
+p = (plots[[1]] + plots[[2]])/plots[[3]] + plots[[4]]/plots[[5]] + plots[[6]]
+
+ggsave(paste0(FigDir,"/", "urban_50_75", "/", Sys.Date(),"_Kano_reprioritization_scenarios_75_seperate_LGA.pdf"), p, width = 13, height = 14)
 
 #####################################
 plots <- list()
@@ -197,6 +229,8 @@ for (ii in seq_along(colums)){
   
   
 }
+
+p = 
 
 
 p_all <- plot_grid(plots[[1]], plots[[2]], plots[[3]], plots[[4]], 
