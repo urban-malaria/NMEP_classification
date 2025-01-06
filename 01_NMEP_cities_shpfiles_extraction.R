@@ -1,4 +1,9 @@
-##NMEP Cities/States exploration
+# ==========================================================================================================================================
+## Script Name: NMEP Cities/States Exploration
+## Purpose: This script processes shapefiles for Nigerian cities and states, generating individual shapefiles for specific cities and wards. 
+## It also creates visualizations of wards in selected cities and saves them as PDF plots. Additionally, it handles the processing of 
+## Kano State shapefiles.
+# ==========================================================================================================================================
 
 rm(list=ls())
 source("~/NMEP_classification/load_path.R", echo = T)

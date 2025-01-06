@@ -1,4 +1,10 @@
-## Kano State
+# ==========================================================================================================================================
+# Script Name: Kano State
+# Purpose: Extracts variables for different Nigerian states (Kano, Kaduna, Katsina, Niger, Delta). 
+# It reads shapefiles for each state, extracts environmental data (NDWI and NDMI) for specific wards in Kano, and applies a custom 
+# extraction function to gather variables for both metropolitan and regional areas across multiple states. 
+# The extracted data is then stored for further analysis.
+# ==========================================================================================================================================
 
 user <- Sys.getenv("USER")
 if ("grace" %in% user) {

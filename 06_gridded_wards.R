@@ -1,4 +1,10 @@
-#summarized morphology metrics for gridded wards
+# ==========================================================================================================================================
+## Script Name: Summarized Morphology Metrics for Gridded Wards
+## Purpose: Summarizes morphology metrics for gridded wards in Nigerian cities. 
+# It calculates building statistics (e.g., area, perimeter, compactness, shape, nearest neighbor index) 
+# using different building footprint datasets (Google OpenBuildings and Microsoft Footprints). 
+# The results are visualized through maps and plots to compare metrics across zones.
+# ==========================================================================================================================================
 
 rm(list =ls())
 

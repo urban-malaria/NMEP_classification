@@ -1,4 +1,10 @@
-#Visualizing landcover urban sprawl maps
+# ==========================================================================================================================================
+## Script Name: Visualizing Landcover Urban Sprawl Maps
+## Purpose: Visualizes land cover and urban sprawl using raster data and shapefiles. 
+# It generates land cover maps for Warri, Nigeria, using raster plots and level plots, 
+# and calculates summary statistics (e.g., mode) for land cover within specified areas. 
+# Outputs include visualizations of land cover distributions and extracted statistics.
+# ==========================================================================================================================================
 
 library(raster)
 library(sf)

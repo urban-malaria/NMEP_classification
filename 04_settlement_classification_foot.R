@@ -1,4 +1,10 @@
-### Classification of wards with building footprints
+# ==========================================================================================================================================
+## Script Name: Classification of Wards with Building Footprints
+## Purpose: This script classifies wards in Nigerian cities based on building footprints. It processes shapefiles and building footprint 
+# data, calculates settlement statistics (e.g., counts and binary classifications), and visualizes results with ggplot2. 
+# Outputs include ward-level settlement statistics saved as CSV files and visualizations of settlement distributions for selected cities.
+# ==========================================================================================================================================
+
 rm(list =ls())
 
 # install foot package from github

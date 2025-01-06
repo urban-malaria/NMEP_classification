@@ -1,4 +1,9 @@
-##Extract environmental variables for Warri and Asaba
+# ==========================================================================================================================================
+## Script Name: Extract Environmental Variables for Warri and Asaba
+## Purpose: Processes geospatial and raster data to extract and summarize environmental variables. 
+# (e.g., rainfall, EVI, NDVI, relative humidity, temperature, distance to water bodies) for Warri and Asaba regions.
+# The script also generates visualizations for these variables.
+# ==========================================================================================================================================
 
 rm(list = ls())
 
