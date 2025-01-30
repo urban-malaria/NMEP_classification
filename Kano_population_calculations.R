@@ -101,6 +101,7 @@ for (ii in seq_along(colums)){
 }
 
 
+
 p_all <- plot_grid(plots[[1]], plots[[2]], plots[[3]], plots[[4]], 
                    ncol = 2,   # Arrange in 2 columns
                    align = "hv",  # Align horizontally and vertically

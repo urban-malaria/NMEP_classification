@@ -13,7 +13,8 @@ Yobe_shp <- sf::st_read(file.path(StateShpDir ,"Yobe", "Yobe_State.shp"))
 Yobe_lGAshp <- sf::st_read(file.path(pathLGA, "NGA_LGAs.shp"))
 sf::sf_use_s2(FALSE)
 
-lga_ward <- sf::st_intersection( Yobe_shp, Yobe_lGAshp)
+
+lga_ward <- sf::st_intersection(Yobe_shp, Yobe_lGAshp)
 
 
 Yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Yobe_plus.csv")) %>% 
@@ -37,6 +38,7 @@ Yobe_ranks <- Yobe_ranks %>%
 
 
 ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
+
 Yobe_itn_data <- readxl::read_excel(
   file.path(ITNDir, "pbi_distribution_Yobe.xlsx"), 
   sheet = 1) 

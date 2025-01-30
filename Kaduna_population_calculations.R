@@ -75,9 +75,9 @@ for (ii in seq_along(colums)){
                                        target_percentage = 30) 
   
   
-  # write.csv(prioritized_kaduna[[ii]], file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
-  #                                             "Kaduna", paste0("kaduna_scenario_", ii, ".csv")))
-  
+  write.csv(prioritized_kaduna[[ii]], file.path(OutputsDir, "NMEP Presentation Reprioritization Tables",
+                                              "Kaduna", paste0("kaduna_scenario_", ii, ".csv")))
+
   combined_plot2 <- Kaduna_shp %>% 
     left_join(prioritized_kaduna[[ii]], by = c("WardName" = "SelectedWards")) %>% 
     mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))

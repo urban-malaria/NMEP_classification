@@ -26,7 +26,11 @@ Kano_data <- read.csv("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/d
             ndmi_mean= mean(ndmi_mean, na.rm = T)
   ) %>% 
   inner_join(Kano_data_co) %>% 
-  ungroup()
+  ungroup() 
+
+# %>% 
+#   select(-c(sn, longitude, latitude)) %>% 
+#   distinct()
 
 
 min_max_scale <- function(x) {

@@ -211,13 +211,13 @@ epsilon <- 1e-15
 predicted_probabilities <- pmin(pmax(probabilities, epsilon), 1 - epsilon)
 
 
-log_loss <- -mean(test_data$target_variable * log(predicted_probabilities) + 
-                    (1 - test_data$target_variable) * log(1 - predicted_probabilities))
-
-
-
-# roc_curve <- roc(test_data$target_variable, predicted_probabilities)
-brier_score <- mean((predicted_probabilities - test_data$target_variable)^2)
+# log_loss <- -mean(test_data$target_variable * log(predicted_probabilities) + 
+#                     (1 - test_data$target_variable) * log(1 - predicted_probabilities))
+# 
+# 
+# 
+# # roc_curve <- roc(test_data$target_variable, predicted_probabilities)
+# brier_score <- mean((predicted_probabilities - test_data$target_variable)^2)
 
 
 # predictions 
