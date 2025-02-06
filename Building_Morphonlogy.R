@@ -31,7 +31,6 @@ library(ggplot2)
 library(openxlsx)
 
 #####Initializing Folder Path
-buildingheightrasterpath <- "/Users/macbookpro/Downloads"
 floodrasterpath <- "nigeria/Raster_files/flooding_2023"
 shapefilepath <-  "nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano_household"
 predictionpoint <- "nigeria/kano_shapefile/gridded_shapefile/gridded/Kano"
@@ -42,8 +41,6 @@ points_sp <- st_read(file.path(dhsDir ,shapefilepath, "Kano_household.shp"))
 
 ###Load prediction point shape file
 prediction_point <- st_read(file.path(dhsDir , predictionpoint, "Kano.shp"))
-
-buildingheightraster <- raster("/Users/macbookpro/Downloads/Kano_height_10m.tif")
 
 
 flood <- raster(file.path(dhsDir , floodrasterpath, "Flooded_Areas_Nigeria_2023.tif"))
@@ -96,8 +93,8 @@ ggplot(prediction_point) +
 
 
 #############Load Kano Metro Shape file##########
-kanoshp <- st_read("/Users/macbookpro/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/Abidjan_Nigeria/Documents/AI_based_settlement_type_classification/Deliverables/inputs/Kano/Kano_metro_ward_sixLGAs/Kano_metro_ward_sixLGAs.shp")
-flooddata2024 <- read.xlsx("/Users/macbookpro/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/kano_flood_data/Kano Flood Assessment data (18 September 2024).xlsx")
+kanoshp <- st_read(file.path(DriveDir, "projects/urban_microstratification/Abidjan_Nigeria/Documents/AI_based_settlement_type_classification/Deliverables/inputs/Kano/Kano_metro_ward_sixLGAs/Kano_metro_ward_sixLGAs.shp"))
+flooddata2024 <- read.xlsx( file.path(DriveDir, "/Users/macbookpro/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/kano_flood_data/Kano Flood Assessment data (18 September 2024).xlsx"))
 
 kanoshp_flood <- left_join(kanoshp, flooddata2024, by=c("WardName" = "Ward"))
 
