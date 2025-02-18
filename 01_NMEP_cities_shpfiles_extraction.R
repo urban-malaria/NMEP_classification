@@ -112,3 +112,43 @@ ggplot()+
 
 st_write(kano_state_shp, file.path(ShpfilesDir,"all_reprioritization_nmep_states",
                                    "Kano State", "Kano_State.shp" ))
+
+
+
+##  All States again: Kano, Delta, Katsina, Kaduna, Taraba, Yobe, Niger
+
+
+nigeria_shp2 <- st_read(file.path(DataDir, "nigeria/nigeria_shapefiles/Nigeria Boundary Files_All",
+                                  "Boundary_VaccWards_Export", "Boundary_VaccWards_Export.shp"))
+
+
+states <- c("Kaduna" = "KD", 
+            "Katsina" = "KT", 
+            "Niger" = "NI", 
+            "Yobe" = "YO", 
+            "Taraba" = "TA",
+            "Kano" = "KN",
+            "Delta" = "DE")
+
+
+for (state in names(states)) {
+  state_code <- states[state]
+  
+  state_shp <- nigeria_shp2 %>% #nigeria_shp
+    filter(StateCode == state_code)
+  
+  print(
+    ggplot() +
+      geom_sf(data = state_shp, aes(geometry = geometry)) +
+      map_theme() +
+      ggtitle(paste(state, "State Map"))
+  )
+  
+  cat(paste(state, "State Shapefile contains", nrow(state_shp), "rows\n"))
+  
+  output_dir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES", state)
+  dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
+  st_write(state_shp, file.path(output_dir, paste0(state, "_State.shp")))
+}
+
+

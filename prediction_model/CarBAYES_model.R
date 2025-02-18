@@ -14,28 +14,42 @@ if (!requireNamespace("sf", quietly = TRUE)) {
 library(CARBayes)
 library(spdep)
 library(sf)
+library(dplyr)
+
+Kano_data_co <- read.csv("C:/Users/laure/Downloads/Kano_cleaned_location.csv") %>% 
+  distinct()
+
+Kano_data <- read.csv("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/kano_ibadan_epi/new_field_data/analysis_docs/kano_environmental_data.csv") %>% 
+  group_by(sn) %>% 
+  summarise(positive  = sum(ifelse(malaria_status == 1, 1, 0)), 
+            negative = sum(ifelse(malaria_status == 2, 1, 0)),
+            prevalence = positive/(positive + negative),
+            mean_monthly_rainfall = mean(mean_monthly_rainfall, na.rm = T),
+            mean_EVI= mean(mean_EVI, na.rm = T),            
+            mean_NDVI= mean(mean_NDVI, na.rm = T),             
+            mean_NTL= mean(mean_NTL, na.rm = T),           
+            distance_to_water= mean(distance_to_water, na.rm = T),
+            elevation= mean(elevation, na.rm = T),          
+            RH_mean= mean(RH_mean, na.rm = T),
+            temp_mean= mean(temp_mean, na.rm = T),
+            ndwi_mean= mean(ndwi_mean, na.rm = T), 
+            ndmi_mean= mean(ndmi_mean, na.rm = T)
+            ) %>% 
+  inner_join(Kano_data_co)
 
 
 
 
-Kano_data <- read.csv("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/Kano data/combined_data.csv")
-
-Kano_shpefile <- st_read("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano_Ibadan/Kano-Ibadan.shp") %>% 
-  dplyr::filter(StateCode == "KN")
-
-Kano_shp <- st_centroid(Kano_shpefile, crs = 4326)
-
-
-Kano_shp$longitude <- st_coordinates(Kano_shp)[ ,1]
-Kano_shp$latitude <- st_coordinates(Kano_shp)[, 2]
-
-kanodata_coordinates <- dplyr::inner_join(Kano_data, Kano_shp) %>% 
+kanodata_coordinates <- Kano_data %>% 
   dplyr::select(longitude, latitude,
-                settlement_type_poor,
-                distance_water, 
-                meanEVI, 
-                #nets_per_capita,
-                target_variable = tpr_u5_new)
+                mean_monthly_rainfall,
+                mean_EVI,
+               # mean_NDVI, 
+                mean_NTL,
+                distance_to_water, elevation, 
+                RH_mean,  temp_mean, ndwi_mean, 
+                ndmi_mean,
+                target_variable = prevalence)
 
 
 
@@ -53,9 +67,8 @@ W <- (W + t(W)) / 2
 
 W <- as.matrix(W, "CsparseMatrix")
 
+formula <- target_variable ~ mean_monthly_rainfall + mean_EVI +  mean_NTL + distance_to_water + elevation + RH_mean + temp_mean + ndwi_mean + ndmi_mean
 
-
-formula <- target_variable ~ settlement_type_poor + distance_water #+  nets_per_capita
 
 # Fit a CAR Bayesian model
 
