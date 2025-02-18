@@ -1,4 +1,10 @@
-## population estimates
+# ==========================================================================================================================================
+## Script Name: Population Estimates
+## Purpose: Processes geographic and building data for Asaba in Delta State, focusing on residential areas. 
+# It includes steps for loading and transforming spatial data, performing spatial joins to identify residential buildings, 
+# and visualizing building counts by ward. Population estimates are generated based on residential building counts, and 
+# multiple population scenarios are calculated for different groupings of wards.
+# ==========================================================================================================================================
 
 getwd()
 source("~/NMEP_classification/load_path.R", echo = T)

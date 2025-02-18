@@ -1,4 +1,9 @@
-## malaria comparability risk scores
+# ==========================================================================================================================================
+## Script Name: Malaria Comparability Risk Scores
+## Purpose: Processes and analyzes data from Ibadan, focusing on malaria prevalence, net ownership, and net usage. 
+# It includes data cleaning, descriptive plots, weighted calculations, and regression models to explore the relationships 
+# between net ownership/use and malaria test positivity rates at the household and ward levels.
+# ==========================================================================================================================================
 
 getwd()
 source("~/NMEP_classification/load_path.R", echo = T)

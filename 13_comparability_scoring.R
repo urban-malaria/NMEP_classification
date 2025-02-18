@@ -1,4 +1,8 @@
-#### Normalization and Scoring
+# ==========================================================================================================================================
+# Script Name: Normalization and Scoring
+# Purpose: Processes shapefiles for specific wards in Ibadan and Kano, merges them with malaria-related 
+# field data, and generates maps visualizing covariates like malaria positivity, net ownership, and net use.
+# ==========================================================================================================================================
 
 ##get new shapefiles
 
