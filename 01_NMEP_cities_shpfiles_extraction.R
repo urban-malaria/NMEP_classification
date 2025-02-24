@@ -5,114 +5,117 @@
 ## Kano State shapefiles.
 # ==========================================================================================================================================
 
-rm(list=ls())
-source("~/NMEP_classification/load_path.R", echo = T)
+# clear the environment
+rm(list = ls())
 
+# load custom paths
+source("~/NMEP_classification/load_path.R", echo = TRUE)
 
-nigeria_shp<- st_read(file.path(ShpfilesDir2, "Nigeria", "Nigeria_Wards.shp"))
+# read nigeria ward shapefiles
+nigeria_shp <- st_read(file.path(ShpfilesDir2, "Nigeria", "Nigeria_Wards.shp"))
 
-#generate individual city shape files from nigeria_shp
+## -----------------------------------------------------------------------------------------------------------------------------------------
+### Generate Individual City Shapefiles from nigeria_shp
+## -----------------------------------------------------------------------------------------------------------------------------------------
 
-#Abeokuta
-abeokuta_shp <- nigeria_shp %>% 
-  filter(LGACode == "28001" | LGACode == "28002") %>%  #Abeokuta-North, Abeokuta-South
+# abeokuta shapefile
+abeokuta_shp <- nigeria_shp %>%
+  filter(LGACode == "28001" | LGACode == "28002") %>%  # abeokuta-north, abeokuta-south
   mutate(LGAName = ifelse(LGACode == "28001", "Abeokuta-North",
                           ifelse(LGACode == "28002", "Abeokuta-South", NA)))
-st_write(abeokuta_shp, file.path(ShpfilesDir, "Abeokuta", "Abeokuta.shp" ))
+st_write(abeokuta_shp, file.path(ShpfilesDir, "Abeokuta", "Abeokuta.shp"))
 
-#Katsina
-katsina_shp <- nigeria_shp %>% 
-  filter(LGACode == "421" | LGACode == "402" | LGACode == "426" |LGACode == "427" | LGACode == "430") %>% #Katsina, Batagarawa, Mani, Mashi, Rimi
+# katsina shapefile
+katsina_shp <- nigeria_shp %>%
+  filter(LGACode %in% c("421", "402", "426", "427", "430")) %>%  # katsina, batagarawa, mani, mashi, rimi
   mutate(LGAName = ifelse(LGACode == "421", "Katsina",
-                          ifelse(LGACode == "402", "Batagawara",
+                          ifelse(LGACode == "402", "Batagarawa",
                                  ifelse(LGACode == "426", "Mani",
                                         ifelse(LGACode == "427", "Mashi",
                                                ifelse(LGACode == "430", "Rimi", NA))))))
-st_write(katsina_shp, file.path(ShpfilesDir, "Katsina", "Katsina.shp" ))
+st_write(katsina_shp, file.path(ShpfilesDir, "Katsina", "Katsina.shp"))
 
-#Dutse
-dutse_shp <- nigeria_shp %>% 
-  filter(LGACode == "18012") %>% #Dutse
+# dutse shapefile
+dutse_shp <- nigeria_shp %>%
+  filter(LGACode == "18012") %>%  # dutse
   mutate(LGAName = "Dutse")
-st_write(dutse_shp, file.path(ShpfilesDir, "Dutse", "Dutse.shp" ))
+st_write(dutse_shp, file.path(ShpfilesDir, "Dutse", "Dutse.shp"))
 
-#Damaturu
-damaturu_shp <- nigeria_shp %>% 
-  filter(LGACode == "703") %>% 
+# damaturu shapefile
+damaturu_shp <- nigeria_shp %>%
+  filter(LGACode == "703") %>%
   mutate(LGAName = "Damaturu")
-st_write(damaturu_shp, file.path(ShpfilesDir, "Damaturu", "Damaturu.shp" ))
+st_write(damaturu_shp, file.path(ShpfilesDir, "Damaturu", "Damaturu.shp"))
 
-#Gombe
-gombe_shp <- nigeria_shp %>% 
-  filter(LGACode == "16006") %>% 
+# gombe shapefile
+gombe_shp <- nigeria_shp %>%
+  filter(LGACode == "16006") %>%
   mutate(LGAName = "Gombe")
-st_write(gombe_shp, file.path(ShpfilesDir, "Gombe", "Gombe.shp" ))
+st_write(gombe_shp, file.path(ShpfilesDir, "Gombe", "Gombe.shp"))
 
-#Jalingo
-jalingo_shp <- nigeria_shp %>% 
-  filter(LGACode == "35007") %>% 
+# jalingo shapefile
+jalingo_shp <- nigeria_shp %>%
+  filter(LGACode == "35007") %>%
   mutate(LGAName = "Jalingo")
-st_write(jalingo_shp, file.path(ShpfilesDir, "Jalingo", "Jalingo.shp" ))
+st_write(jalingo_shp, file.path(ShpfilesDir, "Jalingo", "Jalingo.shp"))
 
-#Asaba
-asaba_shp <- nigeria_shp %>% 
-  filter(LGACode == "10015") %>% 
+# asaba shapefile
+asaba_shp <- nigeria_shp %>%
+  filter(LGACode == "10015") %>%
   mutate(LGAName = "Oshimili-South")
-st_write(asaba_shp, file.path(ShpfilesDir, "Asaba", "Asaba.shp" ))
+st_write(asaba_shp, file.path(ShpfilesDir, "Asaba", "Asaba.shp"))
 
-#Sapele
-sapele_shp <- nigeria_shp %>% 
-  filter(LGACode == "10017") %>% 
+# sapele shapefile
+sapele_shp <- nigeria_shp %>%
+  filter(LGACode == "10017") %>%
   mutate(LGAName = "Sapele")
-st_write(sapele_shp, file.path(ShpfilesDir, "Sapele", "Sapele.shp" ))
+st_write(sapele_shp, file.path(ShpfilesDir, "Sapele", "Sapele.shp"))
 
-ggplot()+
-  geom_sf(data = sapele_shp, aes(geometry = geometry, fill = LGAName))+
+# plot wards in sapele
+ggplot() +
+  geom_sf(data = sapele_shp, aes(geometry = geometry, fill = LGAName)) +
   ggrepel::geom_text_repel(data = sapele_shp, aes(label = WardName, geometry = geometry),
                            color = "black", stat = "sf_coordinates",
-                           min.segment.length = 0, size = 4, force = 1)+
+                           min.segment.length = 0, size = 4, force = 1) +
   labs(title = "Wards in Sapele",
-       x = "",
-       y = "",
-       fill = "LGA")+
+       x = "", y = "", fill = "LGA") +
   map_theme()
 
-#plot wards in each city
-cities <- c("Abeokuta", "Asaba", "Damaturu", "Dutse", "Gombe", "Ilorin", "Jalingo", "Kano", "Katsina", 
+# plot wards for each city
+cities <- c("Abeokuta", "Asaba", "Damaturu", "Dutse", "Gombe", "Ilorin", "Jalingo", "Kano", "Katsina",
             "Minna", "Osogbo", "Warri", "Zaria")
 
 for (city in cities) {
   
+  # read shapefile for each city
   city_shp <- st_read(file.path(ShpfilesDir, city, paste0(city, ".shp")))
   
-  city_map <- ggplot()+
-    geom_sf(data = city_shp, aes(geometry = geometry, fill = LGAName))+
+  # create map of wards
+  city_map <- ggplot() +
+    geom_sf(data = city_shp, aes(geometry = geometry, fill = LGAName)) +
     ggrepel::geom_text_repel(data = city_shp, aes(label = WardName, geometry = geometry),
                              color = "black", stat = "sf_coordinates",
-                             min.segment.length = 0, size = 4, force = 1)+
+                             min.segment.length = 0, size = 4, force = 1) +
     labs(title = paste("Wards in", city),
-         x = "",
-         y = "",
-         fill = "LGA")+
+         x = "", y = "", fill = "LGA") +
     map_theme()
   
-ggsave(filename = file.path(plots_dir, "cities", paste0(city, ".pdf")), plot = city_map, 
-       width = 8, height = 6)
+  # save the plot
+  ggsave(filename = file.path(plots_dir, "cities", paste0(city, ".pdf")),
+         plot = city_map, width = 8, height = 6)
 }
 
+# plot all wards in kano state
+kano_state_shp <- nigeria_shp %>%
+  filter(StateCode == "KN")  # all kano state wards = 484 wards
 
-# Kano State
-
-kano_state_shp <- nigeria_shp %>% 
-  filter(StateCode == "KN")  #All Kano State Wards = 484 wards
-
-ggplot()+
-  geom_sf(data = kano_state_shp, aes(geometry = geometry))+
+ggplot() +
+  geom_sf(data = kano_state_shp, aes(geometry = geometry)) +
   map_theme()
 
-st_write(kano_state_shp, file.path(ShpfilesDir,"all_reprioritization_nmep_states",
-                                   "Kano State", "Kano_State.shp" ))
-
+# save kano state shapefile
+st_write(kano_state_shp, file.path(ShpfilesDir, "all_reprioritization_nmep_states",
+                                   "Kano State", "Kano_State.shp"))
 
 
 ##  All States again: Kano, Delta, Katsina, Kaduna, Taraba, Yobe, Niger
@@ -150,5 +153,3 @@ for (state in names(states)) {
   dir.create(output_dir, showWarnings = FALSE, recursive = TRUE)
   st_write(state_shp, file.path(output_dir, paste0(state, "_State.shp")))
 }
-
-
