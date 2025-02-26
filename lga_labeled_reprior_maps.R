@@ -23,19 +23,59 @@ create_state_reprioritization_maps <- function(state_name) {
   
   # read in ward prioritization data for both scenarios
   ward_50 <- read.csv(file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
-                                paste0(state_name), paste0(state_name, "_scenario_3.csv"))) %>%
-    left_join(state_ranks, by = c("SelectedWards" = "WardName"))
+                                paste0(state_name), paste0(state_name, "_scenario_3.csv")))
   ward_75 <- read.csv(file.path(OutputsDir, "NMEP Presentation Reprioritization Tables", 
-                                paste0(state_name), paste0(state_name, "_scenario_4.csv"))) %>%
-    left_join(state_ranks, by = c("SelectedWards" = "WardName"))
+                                paste0(state_name), paste0(state_name, "_scenario_4.csv")))
   
-  prioritized_50 <- state_shp %>% 
-    left_join(ward_50, by = c("WardName" = "SelectedWards")) %>% 
-    mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+  # match with shapefile by ward code for Kaduna, Niger, Delta, and Yobe
+  if (state_name %in% c("Kaduna", "Niger", "Delta", "Yobe")) {
+    ward_50$WardCode <- as.character(ward_50$WardCode)
+    ward_75$WardCode <- as.character(ward_75$WardCode)
+    state_shp$WardCode <- as.character(state_shp$WardCode)
+    
+    prioritized_50 <- state_shp %>% 
+      left_join(ward_50, by = c("WardCode")) %>% 
+      mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+    
+    prioritized_75 <- state_shp %>% 
+      left_join(ward_75, by = c("WardCode")) %>% 
+      mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+  }
   
-  prioritized_75 <- state_shp %>% 
-    left_join(ward_75, by = c("WardName" = "SelectedWards")) %>% 
-    mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+  # match with shapefile by ward name for Katsina (no ward code variable)
+  if(state_name == "Katsina") {
+    ward_50$SelectedWards <- as.character(ward_50$SelectedWards)
+    ward_75$SelectedWards <- as.character(ward_75$SelectedWards)
+    state_shp$WardName <- as.character(state_shp$WardName)
+    
+    prioritized_50 <- state_shp %>% 
+      left_join(ward_50, by = c("WardName" = "SelectedWards")) %>% 
+      mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+    
+    prioritized_75 <- state_shp %>% 
+      left_join(ward_75, by = c("WardName" = "SelectedWards")) %>% 
+      mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
+  }
+  
+  # # check for duplicate WardName entries in state_shp
+  # duplicate_wards <- state_shp %>%
+  #   group_by(WardName) %>%
+  #   summarise(count = n()) %>%
+  #   filter(count > 1)
+  # 
+  # if (nrow(duplicate_wards) > 0) {
+  #   warning("The following WardNames appear more than once in state_shp:")
+  #   print(duplicate_wards)
+  # }
+  
+  # # check for WardNames in ward_50 that do not exist in state_shp
+  # missing_wards <- ward_50 %>%
+  #   filter(!WardCode %in% state_shp$WardCode)
+  # 
+  # if (nrow(missing_wards) > 0) {
+  #   warning("The following WardNames in ward_50 do not exist in state_shp:")
+  #   print(missing_wards)
+  # }
   
   labels_50 <- prioritized_50 %>%
     dplyr::filter(status == "Reprioritized") %>%
