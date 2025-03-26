@@ -57,7 +57,7 @@ create_state_reprioritization_maps <- function(state_name) {
       mutate(status = ifelse(is.na(WardPopulation), "Not Reprioritized", "Reprioritized"))
   }
   
-  # # check for duplicate WardName entries in state_shp
+  # # # check for duplicate WardName entries in state_shp
   # duplicate_wards <- state_shp %>%
   #   group_by(WardName) %>%
   #   summarise(count = n()) %>%
