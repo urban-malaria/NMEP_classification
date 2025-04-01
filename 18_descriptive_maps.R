@@ -23,87 +23,73 @@ yobe_data <- read.csv(file.path(OutputsDir, "Final Extractions/yobe_plus.csv"))
 kano_data <- read.csv(file.path(OutputsDir, "Final Extractions/kano_plus.csv"))
 
 # list of variables to map
-vars <- c("mean_EVI", "mean_NDVI", "mean_rainfall", "distance_to_water", "RH_mean", "temp_mean", 
-          "housing_quality", "pfpr", "avgRAD", "flood", "NDWI", "NDMI", "elevation", 
-          "mean_soil_wetness", "settlement_type", "u5_tpr_rdt", "urbanPercentage")
+vars <- c("mean_EVI", "u5_tpr_rdt", "distance_to_water", "settlement_type", "flood")
 
 var_labels <- c(
-  mean_EVI = "Mean EVI",
-  mean_NDVI = "Mean NDVI",
-  mean_rainfall = "Mean Rainfall (mm)",
+  mean_EVI = "Mean Enhanced Vegetation Index (EVI)",
   distance_to_water = "Distance to Water (km)",
-  RH_mean = "Mean Relative Humidity (%)",
-  temp_mean = "Mean Temperature (°C)",
-  housing_quality = "Housing Quality Index",
-  pfpr = "Plasmodium Falciparum Prevalence (%)",
-  avgRAD = "Average Nighttime Lights (RAD)",
   flood = "Flood Risk",
-  NDWI = "Normalized Difference Water Index",
-  NDMI = "Normalized Difference Moisture Index",
-  elevation = "Elevation (m)",
-  mean_soil_wetness = "Mean Soil Wetness",
-  settlement_type = "Settlement Type",
-  u5_tpr_rdt = "Under-5 Malaria Test Positivity Rate (%)",
-  urbanPercentage = "Urban Percentage (%)"
+  settlement_type = "Proportion of Homes Classified as Poor Housing",
+  u5_tpr_rdt = "Under-5 Malaria Test Positivity Rate (%)"
 )
 
+# define color scale for each variable
+color_scales <- list(
+  "mean_EVI" = scale_fill_gradient(low = "white", high = "#385e3c", na.value = "grey"),
+  "distance_to_water" = scale_fill_gradient(low = "white", high = "#542c5d", na.value = "grey"),
+  "flood" = scale_fill_gradient(low = "white", high = "#2e5984", na.value = "grey"),
+  "settlement_type" = scale_fill_gradient(low = "white", high = "#cc5500", na.value = "grey"),
+  "u5_tpr_rdt" = scale_fill_gradient(low = "white", high = "red", na.value = "grey")
+)
 
-# Function to create and save maps
+# function to create and save maps
 map_variable <- function(shapefile, data, state_name, output_dir, vars) {
   
   message("Making maps for ", state_name)
   
   data$WardCode <- as.character(data$WardCode)
-  shapefile$WardCode <- as.character(data$WardCode)
+  shapefile$WardCode <- as.character(shapefile$WardCode)
   
-  # make pfpr a percentage
-  data$pfpr <- data$pfpr * 100
-  
-  # Merge shapefile with data
+  # merge shapefile with data
   merged_data <- shapefile %>%
     left_join(data, by = "WardCode") 
   
-  # Create output directory if it doesn't exist
-  state_output_dir <- file.path(output_dir, state_name)
-  if (!dir.exists(state_output_dir)) dir.create(state_output_dir, recursive = TRUE)
-  individual_output_dir <- file.path(state_output_dir, "individual plots")
-  if (!dir.exists(individual_output_dir)) dir.create(individual_output_dir, recursive = TRUE)
-  
+  # list to store plots
   plot_list <- list()
   
   for (var in vars) {
     if (var %in% names(merged_data)) {
       
-      # Generate map
+      fill_scale <- color_scales[[var]]
+      
+      # generate map
       map_plot <- ggplot(merged_data) +
         geom_sf(aes(geometry = geometry, fill = !!sym(var))) +
-        scale_fill_gradient(low = "#DFECF7", high = "#203569", na.value = "orange") +
-        labs(title = paste(state_name, "-", var_labels[[var]]), fill = var_labels[[var]]) +
+        fill_scale +
+        labs(title = var_labels[[var]], fill = var_labels[[var]]) +
         map_theme() +
         theme(
-          plot.title = element_text(hjust = 0.5),
-          plot.subtitle = element_text(hjust = 0.5),
+          plot.title = element_text(size = 10, hjust = 0.5),
         )
       
-      # Save map
-      ggsave(filename = file.path(individual_output_dir, paste0(var, ".png")), 
-             plot = map_plot, width = 8, height = 6, dpi = 300)
-      
-      # Store plot in list
+      # store plot in list
       plot_list[[var]] <- map_plot
     }
   }
-  # Save all plots for the state in a single PDF
-  pdf(file.path(state_output_dir, paste0(state_name, "_maps.pdf")), width = 8, height = 6)
-  for (plot in plot_list) {
-    print(plot)
-  }
-  dev.off()
   
-  return(plot_list)
+  # combine plots into a grid (single page)
+  combined_plot <- wrap_plots(plot_list, ncol = 2) + 
+    plot_annotation(title = paste(state_name, "Maps")) & 
+    theme(plot.title = element_text(hjust = 0.5)) 
+  
+  # save the combined plot as a PDF (single page)
+  ggsave(file.path(plotsDir, paste0(state_name, "_maps.pdf")), 
+         plot = combined_plot, width = 8, height = 8, dpi = 300, device = cairo_pdf)
+  
+  return(combined_plot)
 }
 
-# Define state shapefiles and data
+# define state shapefiles and data
 state_shapefiles <- list(
   "Kaduna" = kaduna_shp,
   "Katsina" = katsina_shp,
@@ -124,7 +110,7 @@ state_data <- list(
 
 plotsDir <- file.path(plotsDir, "covariate maps")
 
-# Loop through states and map each variable
+# loop through states and map each variable
 for (state in names(state_shapefiles)) {
   map_variable(state_shapefiles[[state]], state_data[[state]], state, plotsDir, vars)
 }
