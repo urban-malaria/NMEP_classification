@@ -28,6 +28,7 @@ FootprintsDir <- file.path(DataDir, "nigeria/building_footprints/OpenBuildings")
 MSGlobalDir <- file.path(DataDir, "nigeria/building_footprints/MSGlobal")
 
 OutputsDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App")
+ExtractedDir <- file.path(DriveDir, "projects/urban_microstratification/NetSmartR/extractions")
 plotsDir <- file.path(OutputsDir, "Plots")
 
 FieldDataDir <- file.path(DataDir, "nigeria/kano_ibadan_epi/new_field_data")
