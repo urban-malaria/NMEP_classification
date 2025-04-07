@@ -20,7 +20,7 @@ niger_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "niger_pl
     classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
   )
 
-# load and clean itn data for kano
+# load and clean itn data for niger
 niger_itn_data <- readxl::read_excel(
   file.path(ITNDir, "pbi_distribution_Niger.xlsx"), 
   sheet = 1) 
