@@ -84,6 +84,13 @@ katsina_itn_clean <- katsina_itn_data %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
 
+# add lga back
+katsina_itn_clean <- katsina_itn_clean %>%
+  left_join(katsina_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
 katsina_extracted_data <- read.csv(file.path(ExtractedDir, "Katsina_wards_variables.csv"))
 
 
@@ -115,73 +122,88 @@ delta_extracted_data <- read.csv(file.path(ExtractedDir, "Delta_wards_variables.
 delta_itn_clean <- delta_itn_data %>%
   rename(Ward = `Row Labels`) %>%
   mutate(Ward = case_when(
-    Ward == "Aballa/ Inyi/ Onuaboh" ~ "Aballa/Inyi/Onuaboh",
-    Ward == "Aboh/ Akarai" ~ "Aboh/Akarai",
-    Ward == "Achalla/Ezukwu/Ogboli" ~ "Ezukwu/Ogboli/Achalla",
-    Ward == "Afor/ Obikwele" ~ "Afor/Obikwele",
-    Ward == "Agbarho I" ~ "Agbarho 1",
-    Ward == "Agbarho II" ~ "Agbarho 2",
-    Ward == "Agbor Obi" ~ "Agbor-Obi 1/Agbor Town II",
-    Ward == "Agbor-Nta" ~ "Agbor-Nta/Agbor Town I",
-    Ward == "Agidiasi" ~ "Agiadiasi",
-    Ward == "Ajudabo" ~ "Ajudaibo",
-    Ward == "Akugbene 3" ~ "Akugbene III",
-    Ward == "Akwuebulu" ~ "Akuebolu",
-    Ward == "Alihagwu" ~ "Alihagwu/Ihiuiyase I",
-    Ward == "Arigborodo" ~ "Abigborodo",
-    Ward == "Ashaka/ Ushie" ~ "Ashaka/Ushie",
-    Ward == "Boji Boji 1" ~ "Boji-Boji I/ Agbor 7",
-    Ward == "Boji Boji Agbor 1" ~ "Boji-Boji I/ Agbor 7",
-    Ward == "Boji Boji Agbor 2" ~ "Boji-Boji II/ Agbor 8",
-    Ward == "Boji Boji Owa 2" ~ "Boji-Boji Owa 2/Owa IV",
-    Ward == "Egbo" ~ "Egbo/Agbon  VII",
-    Ward == "Egini" ~ "Egini/Ovwian II",
-    Ward == "Ejeme/ Egbudu" ~ "Ejeme/Egbudu",
-    Ward == "Ekametagbene/Kalafio" ~ "Kolafiogbene/Ekametagbene",
-    Ward == "Eku" ~ "Eku/Agbon  VI",
-    Ward == "Ewulu/ Isheagu" ~ "Ewulu/Isheagu",
-    Ward == "Ibedeni/ Azagba" ~ "Ibedeni/Azagba",
-    Ward == "Iberede/Onu/Iyede-Ame" ~ "Ibrede/Onu/Iyede-Ame",
-    Ward == "Idumuje-Umor" ~ "Idumuje-Unor",
-    Ward == "Igun" ~ "Igun/Agbon  V",
-    Ward == "Isiokolo" ~ "Isiokolo/Agbon  VIII",
-    Ward == "Kokori" ~ "Kokori/Agbon  III",
-    Ward == "Mandangho" ~ "Madangho",
-    Ward == "Ogbe - Obiaruku" ~ "Ogbeobiaruku",
-    Ward == "Ogbe-Udu" ~ "Ogbe Udu",
-    Ward == "Ogbudugbudu" ~ "Okbudugbudu",
-    Ward == "Ogharefe 1" ~ "Ogharefe 1/Oghara I",
-    Ward == "Ogharefe 2" ~ "Ogharefe 2/Oghara II",
-    Ward == "Ogharefe 3" ~ "Ogharefe 3/Oghara III",
-    Ward == "Ogor" ~ "Otor-Ogor",
-    Ward == "Oko-Ogbele" ~ "Oko Ogbele",
-    Ward == "Okpanam/ Ugbolu" ~ "Okpanam/Ugbolu",
-    Ward == "Okpara" ~ "Okpara/Agbon  I",
-    Ward == "Okuzu" ~ "Okuzu/Obiaruku  II",
-    Ward == "Olomu 3" ~ "Olomu 3-Effurun-Otor",
-    Ward == "Oria" ~ "Oria/Abraka  III",
-    Ward == "Orogun I" ~ "Orogun 1",
-    Ward == "Orogun II" ~ "Orogun 2-Erhobaro",
-    Ward == "Otor-Udu" ~ "Otor Udu/Udu I",
-    Ward == "Ovu" ~ "Ovu/Agbon  II",
-    Ward == "Owa Oyibu" ~ "Owa-Oyibu",
-    Ward == "Owa- Alizomor" ~ "Owa-Alizomor/Owa  VI",
-    Ward == "Owa-Alero" ~ "Owa-Alero/Owa II",
-    Ward == "Owanta" ~ "Owanta/Owa  V",
-    Ward == "Owhe Ward 1" ~ "Owhe 1",
-    Ward == "Owhe Ward 2" ~ "Owhe 2",
-    Ward == "Owhe Ward 3" ~ "Owhe 3",
-    Ward == "Owhrode" ~ "Owhrode/Udu II",
-    Ward == "Oyede Ward" ~ "Oyede",
-    Ward == "Oyoko" ~ "Oyoko/Abavo I",
-    Ward == "Ozanogogo" ~ "Ozanogogo/Ihuozomor (Ozanogogo Alisimie)",
-    Ward == "Ozoro Ward 1" ~ "Ozoro 1",
-    Ward == "Ozoro Ward 2" ~ "Ozoro 2",
-    Ward == "Ozoro Ward 3" ~ "Ozoro 3",
-    Ward == "Udomi-Azuowa" ~ "Udomi-Azuowa/Abavo II",
-    Ward == "Urhuovie" ~ "Urhuovie/Abraka  II",
-    Ward == "Orhaorpo" ~ "Orhaorpo/Agbon  IV",
-    Ward == "Abraka" ~ "Abraka I",
+    Ward == "Aballa/ Inyi/ Onuaboh" ~	"Aballa/Inyi/Onuaboh",
+    Ward == "Abbi 1" ~	"Abbi 8",
+    Ward == "Abbi 2" ~	"Abbi 9",
+    Ward == "Aboh/ Akarai" ~	"Aboh/Akarai",
+    Ward == "Abraka" ~	"Abraka I",
+    Ward == "Achalla/Ezukwu/Ogboli" ~	"",
+    Ward == "Afor/ Obikwele" ~	"Afor/Obikwele",
+    Ward == "Agbarho I" ~	"Agbarho 1",
+    Ward == "Agbarho II" ~	"Agbarho 2",
+    Ward == "Agbor Obi" ~	"Agbor-Obi 1/Agbor Town II",
+    Ward == "Agbor Obi Ward 2" ~	"",
+    Ward == "Agbor-Nta" ~	"Agbor-Nta/Agbor Town I",
+    Ward == "Agidiasi" ~	"Agiadiasi",
+    Ward == "Ajudabo" ~	"Ajudaibo",
+    Ward == "Akugbene 3" ~	"Akugbene III",
+    Ward == "Akwuebulu" ~	"Akuebolu",
+    Ward == "Alihagwu" ~	"Alihagwu/Ihiuiyase I",
+    Ward == "Arigborodo" ~	"Abigborodo",
+    Ward == "Ashaka/ Ushie" ~	"Ashaka/Ushie",
+    Ward == "Boji Boji 1" ~	"Boji-Boji Owa 1/Owa III",
+    Ward == "Boji Boji Agbor 1" ~	"Boji-Boji I/ Agbor 7",
+    Ward == "Boji Boji Agbor 2" ~	"Boji-Boji II/ Agbor 8",
+    Ward == "Boji Boji Owa 2" ~	"Boji-Boji Owa 2/Owa IV",
+    Ward == "Egbo" ~	"Egbo/Agbon  VII",
+    Ward == "Egini" ~	"Egini/Ovwian II",
+    Ward == "Egodor" ~	"",
+    Ward == "Ejeme/ Egbudu" ~	"Ejeme/Egbudu",
+    Ward == "Ekametagbene/Kalafio" ~	"",
+    Ward == "Ekpan I" ~	"Ekpan 9",
+    Ward == "Ekpan II" ~	"Ekpan 10",
+    Ward == "Eku" ~	"Eku/Agbon  VI",
+    Ward == "Enerhen 1" ~	"Enerhen 3",
+    Ward == "Enerhen I" ~	"",
+    Ward == "Enerhen II" ~	"Enerhen 4",
+    Ward == "Ewulu/ Isheagu" ~	"Ewulu/Isheagu",
+    Ward == "Ibedeni/ Azagba" ~	"Ibedeni/Azagba",
+    Ward == "Iberede/Onu/Iyede-Ame" ~	"Ibrede/Onu/Iyede-Ame",
+    Ward == "Idumuje-Umor" ~	"Idumuje-Unor",
+    Ward == "Igun" ~	"Igun/Agbon  V",
+    Ward == "Irri 1" ~	"Irri 10",
+    Ward == "Irri 2" ~	"Irri 11",
+    Ward == "Isiokolo" ~	"Isiokolo/Agbon  VIII",
+    Ward == "Kokori" ~	"Kokori/Agbon  III",
+    Ward == "Mandangho" ~	"Madangho",
+    Ward == "Ogbe - Obiaruku" ~	"Ogbeobiaruku",
+    Ward == "Ogbe-Udu" ~	"Ogbe Udu",
+    Ward == "Ogbudugbudu" ~	"Okbudugbudu",
+    Ward == "Ogharefe 1" ~	"Ogharefe 1/Oghara I",
+    Ward == "Ogharefe 2" ~	"Ogharefe 2/Oghara II",
+    Ward == "Ogharefe 3" ~	"Ogharefe 3/Oghara III",
+    Ward == "Oghareki 1" ~	"",
+    Ward == "Oghareki 2" ~	"",
+    Ward == "Ogor" ~	"",
+    Ward == "Ogume 1" ~	"Ogume 6",
+    Ward == "Ogume 2" ~	"Ogume 7",
+    Ward == "Oko-Ogbele" ~	"Oko Ogbele",
+    Ward == "Okpanam/ Ugbolu" ~	"Okpanam/Ugbolu",
+    Ward == "Okpara" ~	"Okpara/Agbon  I",
+    Ward == "Okuzu" ~	"Okuzu/Obiaruku  II",
+    Ward == "Olomu 3" ~	"Olomu 3-Effurun-Otor",
+    Ward == "Orhaorpo" ~	"Orhaorpo/Agbon  IV",
+    Ward == "Oria" ~	"Oria/Abraka  III",
+    Ward == "Orogun I" ~	"Orogun 1",
+    Ward == "Orogun II" ~	"Orogun 2-Erhobaro",
+    Ward == "Otor-Udu" ~	"Otor Udu/Udu I",
+    Ward == "Ovu" ~	"Ovu/Agbon  II",
+    Ward == "Owa- Alizomor" ~	"Owa-Alizomor/Owa  VI",
+    Ward == "Owa Oyibu" ~	"Owa-Oyibu",
+    Ward == "Owa-Alero" ~	"Owa-Alero/Owa II",
+    Ward == "Owanta" ~	"Owanta/Owa  V",
+    Ward == "Owhe Ward 1" ~	"Owhe 1",
+    Ward == "Owhe Ward 2" ~	"Owhe 2",
+    Ward == "Owhe Ward 3" ~	"Owhe 3",
+    Ward == "Owhrode" ~	"Owhrode/Udu II",
+    Ward == "Oyede Ward" ~	"Oyede",
+    Ward == "Oyoko" ~	"Oyoko/Abavo I",
+    Ward == "Ozanogogo" ~	"Ozanogogo/Ihuozomor (Ozanogogo Alisimie)",
+    Ward == "Ozoro Ward 1" ~	"Ozoro 1",
+    Ward == "Ozoro Ward 2" ~	"Ozoro 2",
+    Ward == "Ozoro Ward 3" ~	"Ozoro 3",
+    Ward == "Udomi-Azuowa" ~	"Udomi-Azuowa/Abavo II",
+    Ward == "Urhuovie" ~	"Urhuovie/Abraka  II",
     TRUE ~ Ward)) %>% 
   dplyr::select(population = `Sum of N_Nets`, Ward) %>%
   group_by(Ward) %>%
@@ -273,6 +295,13 @@ kaduna_itn_clean <- kaduna_itn_data %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
 
+# add lga back
+kaduna_itn_clean <- kaduna_itn_clean %>%
+  left_join(kaduna_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
 # identify mismatches
 itn_unique <- unique(kaduna_itn_clean$Ward)
 extracted_unique <- unique(kaduna_extracted_data$WardName)
@@ -291,12 +320,12 @@ writexl::write_xlsx(kaduna_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribu
 ## =========================================================================================================================================
 
 # read in ITN data and extracted data
-niger_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Niger.xlsx"), sheet = 1)
+niger_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Niger.csv"))
 niger_extracted_data <- read.csv(file.path(ExtractedDir, "Niger_wards_variables.csv"))
 
 niger_itn_clean <- niger_itn_data %>%
-  rename(population = `Sum of N_Nets`,
-         Ward = `Row Labels`) %>%
+  rename(population = `N_Nets`,
+         Ward = `AdminLevel3`) %>%
   dplyr::select(population, Ward) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = T)) %>%
@@ -374,6 +403,13 @@ niger_itn_clean <- niger_itn_data %>%
     TRUE ~ Ward
   )) %>%
   mutate(num = 1:n())
+
+# add lga back
+niger_itn_clean <- niger_itn_clean %>%
+  left_join(niger_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
 
 # identify mismatches
 itn_unique <- unique(niger_itn_clean$Ward)
@@ -462,7 +498,8 @@ yobe_extracted_data <- read.csv(file.path(ExtractedDir, "Yobe_wards_variables.cs
 
 yobe_itn_clean <- yobe_itn_data %>%
   rename(population = `N_Nets`,
-         Ward = `AdminLevel3`) %>%
+         Ward = `AdminLevel3`,
+         LGA = AdminLevel2) %>%
   mutate(Ward = case_when(
     # Ward name standardization
     Ward == "Asheikiri" ~ "Asheikri",
@@ -510,11 +547,18 @@ yobe_itn_clean <- yobe_itn_data %>%
     Ward == "Yarimaram" ~ "Yerimaram",
     Ward == "Zangaya/Mazawun" ~ "Zangaya Mazawaun",
     TRUE ~ Ward)) %>%
-  dplyr::select(population, Ward) %>%
+  dplyr::select(population, Ward, LGA) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = T)) %>%
   ungroup() %>%
   mutate(num = 1:n())
+
+# add lga back
+yobe_itn_clean <- yobe_itn_clean %>%
+  left_join(yobe_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
 
 # identify mismatches
 itn_unique <- unique(yobe_itn_clean$Ward)
