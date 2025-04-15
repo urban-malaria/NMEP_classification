@@ -12,7 +12,10 @@ katsina_shp <- sf::st_read(file.path(StateShpDir ,"Katsina", "Katsina_State.shp"
 niger_shp <- sf::st_read(file.path(StateShpDir ,"Niger", "Niger_State.shp"))
 taraba_shp <- sf::st_read(file.path(StateShpDir ,"Taraba", "Taraba_State.shp"))
 yobe_shp <- sf::st_read(file.path(StateShpDir ,"Yobe", "Yobe_State.shp"))
-kano_shp <- sf::st_read(file.path(StateShpDir ,"Kano", "Kano_State.shp"))
+# kano_shp <- sf::st_read(file.path(StateShpDir ,"Kano", "Kano_State.shp"))
+kano_shp <- sf::st_read(file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano_metro/Kano_metro.shp"))
+kano_shp <- sf::st_set_crs(kano_shp, 4326)
+kano_shp <- sf::st_transform(kano_shp, 4326)
 
 # read in extracted data for each state
 kaduna_data <- read.csv(file.path(OutputsDir, "Final Extractions/kaduna_plus.csv"))
@@ -21,6 +24,7 @@ niger_data <- read.csv(file.path(OutputsDir, "Final Extractions/niger_plus.csv")
 taraba_data <- read.csv(file.path(OutputsDir, "Final Extractions/taraba_plus.csv"))
 yobe_data <- read.csv(file.path(OutputsDir, "Final Extractions/yobe_plus.csv"))
 kano_data <- read.csv(file.path(OutputsDir, "Final Extractions/kano_plus.csv"))
+
 
 # list of variables to map
 vars <- c("mean_EVI", "u5_tpr_rdt", "distance_to_water", "settlement_type", "flood")
@@ -83,7 +87,7 @@ map_variable <- function(shapefile, data, state_name, output_dir, vars) {
     theme(plot.title = element_text(hjust = 0.5)) 
   
   # save the combined plot as a PDF (single page)
-  ggsave(file.path(plotsDir, paste0(state_name, "_maps.pdf")), 
+  ggsave(file.path(plotsDir, paste0(state_name, "_metro_maps.pdf")), 
          plot = combined_plot, width = 8, height = 8, dpi = 300, device = cairo_pdf)
   
   return(combined_plot)
@@ -91,20 +95,20 @@ map_variable <- function(shapefile, data, state_name, output_dir, vars) {
 
 # define state shapefiles and data
 state_shapefiles <- list(
-  "Kaduna" = kaduna_shp,
-  "Katsina" = katsina_shp,
-  "Niger" = niger_shp,
-  "Taraba" = taraba_shp,
-  "Yobe" = yobe_shp,
+  # "Kaduna" = kaduna_shp,
+  # "Katsina" = katsina_shp,
+  # "Niger" = niger_shp,
+  # "Taraba" = taraba_shp,
+  # "Yobe" = yobe_shp,
   "Kano" = kano_shp
 )
 
 state_data <- list(
-  "Kaduna" = kaduna_data,
-  "Katsina" = katsina_data,
-  "Niger" = niger_data,
-  "Taraba" = taraba_data,
-  "Yobe" = yobe_data,
+  # "Kaduna" = kaduna_data,
+  # "Katsina" = katsina_data,
+  # "Niger" = niger_data,
+  # "Taraba" = taraba_data,
+  # "Yobe" = yobe_data,
   "Kano" = kano_data
 )
 
