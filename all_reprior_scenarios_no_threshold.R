@@ -67,7 +67,15 @@ niger_itn_clean <- niger_itn_data %>%
   )) %>%
   mutate(num = 1:n())
 
+niger_itn_clean <- read_excel(file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/ITN_distribution/household_member_ward_summaries_Itn_distribution/ITN_distribution_total_ward_niger_2022.xlsx"))
 
+niger_itn_clean <- niger_itn_clean %>%
+  rename(population = `Sum of N_FamilyMembers`) %>%
+  dplyr::select(population, Ward) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = T)) %>%
+  ungroup()
+  
 # read in ranks data for niger
 niger_ranks <- read.csv(file.path(OutputsDir, "rankings", "Niger_rankings.csv")) %>% 
   dplyr::select(WardName, WardCode, median_rank, ranks)
