@@ -79,7 +79,7 @@ katsina_itn_clean <- katsina_itn_data %>%
     Ward == "Yaya/Bidore" ~ "Yaya",
     TRUE ~ Ward
   )) %>%
-  dplyr::select(population = `N_Nets`, Ward) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
@@ -116,11 +116,11 @@ writexl::write_xlsx(katsina_itn_clean, file.path(ITNDir, "cleaned", "pbi_distrib
 ## =========================================================================================================================================
 
 # read in ITN data and extracted data
-delta_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Delta.xlsx"), sheet = 1)
+delta_itn_data <- readxl::read_excel(file.path(ITNDir, "original full ITN datasets/pbi_distribution_Delta.xlsx"))
 delta_extracted_data <- read.csv(file.path(ExtractedDir, "Delta_wards_variables.csv"))
 
 delta_itn_clean <- delta_itn_data %>%
-  rename(Ward = `Row Labels`) %>%
+  rename(Ward = `AdminLevel3`) %>%
   mutate(Ward = case_when(
     Ward == "Aballa/ Inyi/ Onuaboh" ~	"Aballa/Inyi/Onuaboh",
     Ward == "Abbi 1" ~	"Abbi 8",
@@ -205,11 +205,17 @@ delta_itn_clean <- delta_itn_data %>%
     Ward == "Udomi-Azuowa" ~	"Udomi-Azuowa/Abavo II",
     Ward == "Urhuovie" ~	"Urhuovie/Abraka  II",
     TRUE ~ Ward)) %>% 
-  dplyr::select(population = `Sum of N_Nets`, Ward) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
 
+# add lga back
+delta_itn_clean <- delta_itn_clean %>%
+  left_join(delta_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
 
 # identify mismatches
 itn_unique <- unique(delta_itn_clean$Ward)
@@ -290,7 +296,7 @@ kaduna_itn_clean <- kaduna_itn_data %>%
     Ward == "T/Nupawa" ~ "Tudun Nupawa",
     Ward == "Riga Chikun" ~ "Rigachikun",
     TRUE ~ Ward)) %>%
-  dplyr::select(population = `N_Nets`, Ward) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
@@ -324,7 +330,7 @@ niger_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Niger.csv"))
 niger_extracted_data <- read.csv(file.path(ExtractedDir, "Niger_wards_variables.csv"))
 
 niger_itn_clean <- niger_itn_data %>%
-  rename(population = `N_Nets`,
+  rename(population = `N_FamilyMembers`,
          Ward = `AdminLevel3`) %>%
   dplyr::select(population, Ward) %>%
   group_by(Ward) %>%
@@ -401,8 +407,7 @@ niger_itn_clean <- niger_itn_data %>%
     Ward == "Yekila(Gunna)" ~ "Gunna Central",
     Ward == "Kafinkoro" ~ "Kafin Koro",
     TRUE ~ Ward
-  )) %>%
-  mutate(num = 1:n())
+  ))
 
 # add lga back
 niger_itn_clean <- niger_itn_clean %>%
@@ -428,15 +433,15 @@ writexl::write_xlsx(niger_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribut
 ## =========================================================================================================================================
 
 # read in ITN data and extracted data
-taraba_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Taraba.xlsx"))
+taraba_itn_data <- readxl::read_excel(file.path(ITNDir, "original full ITN datasets/pbi_distribution_Taraba.xlsx"))
 taraba_extracted_data <- read.csv(file.path(ExtractedDir, "Taraba_wards_variables.csv"))
 
 # clean ITN data
 taraba_itn_clean <- taraba_itn_data %>%
-  rename(Ward = `Row Labels`, num_nets = `Sum of N_Nets`) %>%
-  dplyr::select(Ward, num_nets) %>%
+  rename(Ward = `AdminLevel3`, population = `N_FamilyMembers`) %>%
+  dplyr::select(Ward, population) %>%
   group_by(Ward) %>%
-  summarise(num_nets = sum(num_nets, na.rm = TRUE)) %>%
+  summarise(Population = sum(population, na.rm = TRUE)) %>%
   mutate(Ward = case_when(
     Ward == "Dampar I" ~ "Dampar 1",
     Ward == "Dampar II" ~ "Dampar 2",
@@ -469,12 +474,20 @@ taraba_itn_clean <- taraba_itn_data %>%
     Ward == "Manang" ~ "Mannang",
     Ward == "Lama" ~ "Lamma",
     Ward == "Maidanu" ~ "Mai Idanu",
+    Ward == "Majindadi" ~ "Majidadi",
     TRUE ~ Ward
   )) %>%
   filter(Ward != "(blank)" &
            Ward != "Grand Total" &
            !is.na(Ward) &
            Ward != "")
+
+# add lga back
+taraba_itn_clean <- taraba_itn_clean %>%
+  left_join(taraba_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
 
 # identify mismatches
 itn_unique <- unique(taraba_itn_clean$Ward)
@@ -497,7 +510,7 @@ yobe_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Yobe.xls
 yobe_extracted_data <- read.csv(file.path(ExtractedDir, "Yobe_wards_variables.csv"))
 
 yobe_itn_clean <- yobe_itn_data %>%
-  rename(population = `N_Nets`,
+  rename(population = `N_FamilyMembers`,
          Ward = `AdminLevel3`,
          LGA = AdminLevel2) %>%
   mutate(Ward = case_when(
@@ -550,8 +563,7 @@ yobe_itn_clean <- yobe_itn_data %>%
   dplyr::select(population, Ward, LGA) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = T)) %>%
-  ungroup() %>%
-  mutate(num = 1:n())
+  ungroup()
 
 # add lga back
 yobe_itn_clean <- yobe_itn_clean %>%
