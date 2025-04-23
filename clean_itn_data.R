@@ -474,6 +474,7 @@ taraba_itn_clean <- taraba_itn_data %>%
     Ward == "Manang" ~ "Mannang",
     Ward == "Lama" ~ "Lamma",
     Ward == "Maidanu" ~ "Mai Idanu",
+    Ward == "Majindadi" ~ "Majidadi",
     TRUE ~ Ward
   )) %>%
   filter(Ward != "(blank)" &
