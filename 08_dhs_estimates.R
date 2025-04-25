@@ -1,4 +1,10 @@
-#DHS Analysis for malaria prevalence
+# ==========================================================================================================================================
+## Script Name: DHS Analysis for Malaria Prevalence
+## This script processes DHS data and shapefiles to analyze and visualize malaria prevalence in the Delta State, 
+# focusing on Warri and Asaba. It includes steps for loading and processing data, calculating survey-weighted malaria prevalence, 
+# and mapping point-level prevalence using spatial intersections with shapefiles. The final output includes visualizations 
+# of malaria prevalence across the specified regions.
+# ==========================================================================================================================================
 
 library(raster)
 library(sf)

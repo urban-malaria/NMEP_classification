@@ -5,49 +5,34 @@ library(spdep)
 library(dplyr)
 
 
+# data <- read.csv("C:/Users/laure/Downloads/spatial_malaria_data.csv")
+# spatial_data <- st_as_sf(data, coords = c("longitude", "latitude"), crs = 4326)
+# 
+
+
 #######################
-Kano_data_co <- read.csv("C:/Users/laure/Downloads/Kano_cleaned_location.csv") %>% 
-  distinct()
+Kano_data <- read.csv("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/Kano data/combined_data.csv")
 
-Kano_data <- read.csv("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/kano_ibadan_epi/new_field_data/analysis_docs/kano_environmental_data.csv") %>% 
-  group_by(sn) %>% 
-  summarise(positive  = sum(ifelse(malaria_status == 1, 1, 0)), 
-            negative = sum(ifelse(malaria_status == 2, 1, 0)),
-            target_variable = positive/(positive + negative),
-            mean_monthly_rainfall = mean(mean_monthly_rainfall, na.rm = T),
-            mean_EVI= mean(mean_EVI, na.rm = T),            
-            mean_NDVI= mean(mean_NDVI, na.rm = T),             
-            mean_NTL= mean(mean_NTL, na.rm = T),           
-            distance_to_water= mean(distance_to_water, na.rm = T),
-            elevation= mean(elevation, na.rm = T),          
-            RH_mean= mean(RH_mean, na.rm = T),
-            temp_mean= mean(temp_mean, na.rm = T),
-            ndwi_mean= mean(ndwi_mean, na.rm = T), 
-            ndmi_mean= mean(ndmi_mean, na.rm = T)
-  ) %>% 
-  inner_join(Kano_data_co) %>% 
-  ungroup() 
+Kano_shpefile <- st_read("C:/Users/laure/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano_Ibadan/Kano-Ibadan.shp") %>% 
+  dplyr::filter(StateCode == "KN")
 
-# %>% 
-#   select(-c(sn, longitude, latitude)) %>% 
-#   distinct()
+Kano_shp <- st_centroid(Kano_shpefile, crs = 4326)
 
 
-min_max_scale <- function(x) {
-  if (!is.numeric(x)) {
-    stop("Input must be numeric.")
-  }
-  (x - min(x, na.rm = TRUE)) / (max(x, na.rm = TRUE) - min(x, na.rm = TRUE))
-}
+Kano_shp$longitude <- st_coordinates(Kano_shp)[ ,1]
+Kano_shp$latitude <- st_coordinates(Kano_shp)[, 2]
 
-de_scaled <- as.data.frame(lapply(Kano_data[,-c(1:3, 11,12,15:19)], min_max_scale))  
-  
-
-Kano_data <- Kano_data[,c(4, 18,19)]%>% 
-  cbind(de_scaled)
+kanodata_coordinates <- dplyr::inner_join(Kano_data, Kano_shp) %>% 
+  dplyr::select(longitude, latitude,
+                settlement_type_poor,
+                distance_water, 
+                meanEVI, 
+                #nets_per_capita,
+                target_variable = tpr_u5_new)
 
 
-spatial_data <- st_as_sf(Kano_data, coords = c("longitude", "latitude"), crs = 4326)
+
+spatial_data <- st_as_sf(kanodata_coordinates, coords = c("longitude", "latitude"), crs = 4326)
 
 
 
@@ -62,8 +47,8 @@ W <- (W + t(W)) / 2
 W <- as.matrix(W, "CsparseMatrix")
 
 
-formula <- target_variable ~ mean_monthly_rainfall + mean_EVI + mean_NDVI + mean_NTL + distance_to_water + elevation + RH_mean + temp_mean + ndwi_mean + ndmi_mean
- #+  nets_per_capita
+
+formula <- target_variable ~ settlement_type_poor + distance_water #+  nets_per_capita
 
 #######################
 
@@ -82,7 +67,7 @@ spatial_data$longitude = st_coordinates(spatial_data)[ ,1]
 spatial_data$latitude =   st_coordinates(spatial_data)[ ,2]
 
 features <- spatial_data %>%
-  dplyr::select(-c(target_variable, target_variable.1))  %>% 
+  dplyr::select(-c(target_variable, longitude, latitude))  %>% 
   st_drop_geometry()
 
 target <- spatial_data$target_variable

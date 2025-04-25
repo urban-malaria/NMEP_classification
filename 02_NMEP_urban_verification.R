@@ -1,4 +1,9 @@
-#Building urban wards and building density
+# ==========================================================================================================================================
+## Script Name: Building Urban Wards and Building Density
+## Purpose: Analyzes urban extents and building density across multiple cities in Nigeria. 
+# It processes shapefiles and raster data, generates maps of urban wards, extracts building density metrics, and compiles lists of urban 
+# and all wards. Results are visualized using ggplot2 and saved.
+# ==========================================================================================================================================
 
 library(sf)
 library(dplyr)

@@ -1,7 +1,10 @@
 # ==========================================================================================================================================
 # Script Name: Kano Comparability
 # Authors: Hephzibah, Grace
-# Purpose: Conduct malaria prevalence analyses
+# Purpose: Processes and analyzes data related to malaria in Kano, focusing on net use and ownership, survey population, and malaria prevalence. 
+# Creates several visualizations, including the malaria test positivity rate by ward and net ownership/access by settlement type. 
+# Calculates weighted values for each ward and conducts regression analyses on net use and malaria positivity, focusing on different 
+# factors such as settlement type and ward. Finally, the code combines shapefiles for Kano and Ibadan to visualize geographic data.
 # ==========================================================================================================================================
 
 rm(list = ls())

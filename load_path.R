@@ -13,6 +13,8 @@ ShpfilesDir <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/S
 ShpfilesDir2 <- file.path(DriveDir, "data/nigeria/nigeria_shapefiles/shapefiles/NMEP Net Distribution States Shapefiles for ADM3 - 13 States")
 StateShpDir <- file.path(ShpfilesDir, "all_reprioritization_nmep_states/STATES")
 
+FigDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App/NMEP Presentation Maps/reprioritization maps")
+
 ITNDir <- file.path(DataDir, "nigeria/ITN_distribution")
 ITNDir2 <- file.path(DataDir, "nigeria/ITN_distribution/household_member_ward_summaries_Itn_distribution")
 
@@ -26,6 +28,7 @@ FootprintsDir <- file.path(DataDir, "nigeria/building_footprints/OpenBuildings")
 MSGlobalDir <- file.path(DataDir, "nigeria/building_footprints/MSGlobal")
 
 OutputsDir <- file.path(DriveDir, "projects/urban_microstratification/Shiny App")
+ExtractedDir <- file.path(DriveDir, "projects/urban_microstratification/NetSmartR/extractions")
 plotsDir <- file.path(OutputsDir, "Plots")
 
 FieldDataDir <- file.path(DataDir, "nigeria/kano_ibadan_epi/new_field_data")

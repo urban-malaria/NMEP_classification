@@ -1,4 +1,10 @@
-## building heights
+# ==========================================================================================================================================
+## Script Name: Building Heights
+## Purpose: Processes geospatial data for Asaba and Warri, Nigeria, focusing on residential building footprints and heights. 
+# It estimates the number of households per building based on height, calculates population estimates for various ward types 
+# (urban, rural, part-urban), and generates summary statistics. The results are saved as CSV files for further analysis, 
+# and visualizations of building footprints and height distributions are created.
+# ==========================================================================================================================================
 
 getwd()
 source("~/NMEP_classification/load_path.R", echo = T)
