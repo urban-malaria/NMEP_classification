@@ -1,6 +1,6 @@
 ## PRIORITIZE WARDS AND POPULATION ESTIMATE FUNCTION
 
-prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col){#, target_percentage = 30) {
+prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col, target_percentage) {
   total_population <- sum(data[[population_col]], na.rm = TRUE)
   
   selected_wards <- c()
@@ -28,9 +28,15 @@ prioritize_wards <- function(data, population_col, rank_col, class_col, ward_col
     ward_populations <- c(ward_populations, ward_population)
     ward_percentages <- c(ward_percentages, round(current_percentage, 2))
     
-    # if (!is.na(current_percentage) && (cumulative_population / total_population) * 100 >= target_percentage) {
-    #   break
-    # }
+    if (!is.na(current_percentage) && (cumulative_population / total_population) * 100 >= target_percentage) {
+      break
+    }
+  }
+  
+  # check if target percentage was not reached
+  final_percentage <- (cumulative_population / total_population) * 100
+  if (final_percentage < target_percentage) {
+    message("Warning: The function ran out of eligible wards before reaching the targeted population threshold (", target_percentage, "%)", " for ITN coverage. Final percentage was ", round(final_percentage, 2), "%.")
   }
   
   result <- data.frame(
