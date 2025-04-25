@@ -21,8 +21,8 @@ Yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Yobe_plus
   distinct(WardCode, .keep_all = TRUE) %>%
   dplyr::select(X, WardName, urbanPercentage, WardCode) %>% 
   mutate(
-    classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
-    classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
+    # classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
+    # classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),
     classification_50 = ifelse(urbanPercentage > 50, "Urban", "Rural"),
     classification_75 = ifelse(urbanPercentage > 75, "Urban", "Rural")
   )  %>% 
