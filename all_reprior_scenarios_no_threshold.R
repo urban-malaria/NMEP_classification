@@ -302,8 +302,10 @@ sf::sf_use_s2(FALSE)
 
 # read and process Yobe variables
 yobe_variables <- read.csv(file.path(OutputsDir, "Final Extractions", "Yobe_plus.csv")) %>% 
+  
+yobe_variables <- yobe_variables %>% 
   distinct(WardCode, .keep_all = TRUE) %>%
-  dplyr::select(X, WardName, urbanPercentage, WardCode) %>% 
+  dplyr::select(WardName, urbanPercentage, WardCode) %>% 
   mutate(
     classification_20 = ifelse(urbanPercentage > 20, "Urban", "Rural"),
     classification_30 = ifelse(urbanPercentage > 30, "Urban", "Rural"),

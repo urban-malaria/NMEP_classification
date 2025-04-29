@@ -13,6 +13,9 @@ source("load_path.R")
 
 # read in ITN data and extracted data
 katsina_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Katsina.xlsx"), sheet = 1)
+katsina_extracted_data <- read.csv(file.path(ExtractedDir, "Katsina_wards_variables.csv"))
+katsina_shapefile <- st_read(file.path(StateShpDir, "Katsina/Katsina_state.shp"))
+
 katsina_itn_clean <- katsina_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
   mutate(Ward = case_when(
@@ -91,15 +94,12 @@ katsina_itn_clean <- katsina_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
-katsina_extracted_data <- read.csv(file.path(ExtractedDir, "Katsina_wards_variables.csv"))
-
-
 katsina_extracted_data <- katsina_extracted_data %>%
   arrange(WardName)
 katsina_itn_clean <- katsina_itn_clean %>%
   arrange(Ward)
 
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(katsina_itn_clean$Ward)
 extracted_unique <- unique(katsina_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -107,6 +107,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(katsina_itn_clean$Ward)
+shapefile_unique <- unique(katsina_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(katsina_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Katsina_clean.xlsx"))
@@ -118,6 +128,7 @@ writexl::write_xlsx(katsina_itn_clean, file.path(ITNDir, "cleaned", "pbi_distrib
 # read in ITN data and extracted data
 delta_itn_data <- readxl::read_excel(file.path(ITNDir, "original full ITN datasets/pbi_distribution_Delta.xlsx"))
 delta_extracted_data <- read.csv(file.path(ExtractedDir, "Delta_wards_variables.csv"))
+delta_shapefile <- st_read(file.path(StateShpDir, "Delta/Delta_state.shp"))
 
 delta_itn_clean <- delta_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
@@ -217,7 +228,7 @@ delta_itn_clean <- delta_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(delta_itn_clean$Ward)
 extracted_unique <- unique(delta_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -225,6 +236,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(delta_itn_clean$Ward)
+shapefile_unique <- unique(delta_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(delta_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Delta_clean.xlsx"))
@@ -237,6 +258,7 @@ writexl::write_xlsx(delta_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribut
 # read in ITN data and extracted data
 kaduna_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Kaduna_old.xlsx"))
 kaduna_extracted_data <- read.csv(file.path(ExtractedDir, "Kaduna_wards_variables.csv"))
+kaduna_shapefile <- st_read(file.path(StateShpDir, "Kaduna/Kaduna_state.shp"))
 
 kaduna_itn_clean <- kaduna_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
@@ -301,6 +323,11 @@ kaduna_itn_clean <- kaduna_itn_data %>%
   summarise(Population = sum(population, na.rm = TRUE)) %>%
   ungroup()
 
+
+ward_to_check <- "Tuku Jukun"
+matches <- kaduna_itn_clean$Ward == ward_to_check
+any(matches)
+
 # add lga back
 kaduna_itn_clean <- kaduna_itn_clean %>%
   left_join(kaduna_itn_data %>%
@@ -308,7 +335,7 @@ kaduna_itn_clean <- kaduna_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(kaduna_itn_clean$Ward)
 extracted_unique <- unique(kaduna_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -316,6 +343,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(kaduna_itn_clean$Ward)
+shapefile_unique <- unique(kaduna_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(kaduna_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Kaduna_clean.xlsx"))
@@ -328,6 +365,7 @@ writexl::write_xlsx(kaduna_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribu
 # read in ITN data and extracted data
 niger_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Niger.csv"))
 niger_extracted_data <- read.csv(file.path(ExtractedDir, "Niger_wards_variables.csv"))
+niger_shapefile <- st_read(file.path(StateShpDir, "Niger/Niger_state.shp"))
 
 niger_itn_clean <- niger_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -356,7 +394,6 @@ niger_itn_clean <- niger_itn_data %>%
     Ward == "Gazhe" ~ "Gazhe 1",
     Ward == "Gupa/Abugi" ~ "Gupa",
     Ward == "Gwarjiko" ~ "Gwarijiko",
-    Ward == "Kafin Koro" ~ "Kafinkoro",
     Ward == "Kuchi Bussu" ~ "Kucibusu",
     Ward == "Kura" ~ "Kura/Auna East",
     Ward == "Kurebe/Kushaka" ~ "Kuregbe",
@@ -416,6 +453,10 @@ niger_itn_clean <- niger_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
+ward_to_check <- "Kafinkoro"
+matches <- niger_itn_clean$Ward == ward_to_check
+any(matches)
+
 # identify mismatches
 itn_unique <- unique(niger_itn_clean$Ward)
 extracted_unique <- unique(niger_extracted_data$WardName)
@@ -424,6 +465,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(niger_itn_clean$Ward)
+shapefile_unique <- unique(niger_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(niger_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Niger_clean.xlsx"))
@@ -435,6 +486,7 @@ writexl::write_xlsx(niger_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribut
 # read in ITN data and extracted data
 taraba_itn_data <- readxl::read_excel(file.path(ITNDir, "original full ITN datasets/pbi_distribution_Taraba.xlsx"))
 taraba_extracted_data <- read.csv(file.path(ExtractedDir, "Taraba_wards_variables.csv"))
+taraba_shapefile <- st_read(file.path(StateShpDir, "Taraba/Taraba_state.shp"))
 
 # clean ITN data
 taraba_itn_clean <- taraba_itn_data %>%
@@ -489,7 +541,7 @@ taraba_itn_clean <- taraba_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(taraba_itn_clean$Ward)
 extracted_unique <- unique(taraba_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -497,6 +549,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(taraba_itn_clean$Ward)
+shapefile_unique <- unique(taraba_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(taraba_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Taraba_clean.xlsx"))
@@ -508,6 +570,7 @@ writexl::write_xlsx(taraba_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribu
 # read in ITN data and extracted data
 yobe_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Yobe.xlsx"))
 yobe_extracted_data <- read.csv(file.path(ExtractedDir, "Yobe_wards_variables.csv"))
+yobe_shapefile <- st_read(file.path(StateShpDir, "Yobe/Yobe_state.shp"))
 
 yobe_itn_clean <- yobe_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -572,7 +635,11 @@ yobe_itn_clean <- yobe_itn_clean %>%
               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
   rename(LGA = AdminLevel2)
 
-# identify mismatches
+ward_to_check <- "Ngilewa"
+matches <- yobe_itn_clean$Ward == ward_to_check
+any(matches)
+
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(yobe_itn_clean$Ward)
 extracted_unique <- unique(yobe_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -580,6 +647,16 @@ missing_in_itn <- setdiff(extracted_unique, itn_unique)
 cat("Wards in ITN data but not in extracted data:\n")
 print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(yobe_itn_clean$Ward)
+shapefile_unique <- unique(yobe_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
 print(missing_in_itn)
 
 writexl::write_xlsx(yobe_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Yobe_clean.xlsx"))
