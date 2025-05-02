@@ -6,6 +6,7 @@
 # ==========================================================================================================================================
 
 source("load_path.R")
+PackageDataDir <- file.path(DriveDir, "data/nigeria/R_package_data")
 
 ## =========================================================================================================================================
 ### KATSINA
@@ -13,8 +14,25 @@ source("load_path.R")
 
 # read in ITN data and extracted data
 katsina_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Katsina.xlsx"), sheet = 1)
+katsina_extracted_data <- read.csv(file.path(ExtractedDir, "Katsina_wards_variables.csv"))  %>%
+  arrange(WardName)
+katsina_shapefile <- st_read(file.path(StateShpDir, "Katsina/Katsina_state.shp"))
+
 katsina_itn_clean <- katsina_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = TRUE)) %>%
+  ungroup()
+
+# add lga back
+katsina_itn_clean <- katsina_itn_clean %>%
+  left_join(katsina_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+katsina_itn_clean <- katsina_itn_clean %>% 
   mutate(Ward = case_when(
     Ward == "Ang Musa" ~ "Anguwan Musa",
     Ward == "Ba'Awa" ~ "Ba'awa",
@@ -78,28 +96,11 @@ katsina_itn_clean <- katsina_itn_data %>%
     Ward == "Yau Yau/ Mallamawa" ~ "Yau-Yau Malamawa",
     Ward == "Yaya/Bidore" ~ "Yaya",
     TRUE ~ Ward
-  )) %>%
-  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
-  group_by(Ward) %>%
-  summarise(Population = sum(population, na.rm = TRUE)) %>%
-  ungroup()
+  ))  %>%
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
-# add lga back
-katsina_itn_clean <- katsina_itn_clean %>%
-  left_join(katsina_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
-
-katsina_extracted_data <- read.csv(file.path(ExtractedDir, "Katsina_wards_variables.csv"))
-
-
-katsina_extracted_data <- katsina_extracted_data %>%
-  arrange(WardName)
-katsina_itn_clean <- katsina_itn_clean %>%
-  arrange(Ward)
-
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(katsina_itn_clean$Ward)
 extracted_unique <- unique(katsina_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -109,7 +110,21 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(katsina_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Katsina_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(katsina_itn_clean$Ward)
+shapefile_unique <- unique(katsina_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# save cleaned ITN data
+writexl::write_xlsx(katsina_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Katsina_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(katsina_shapefile, file.path(PackageDataDir, "shapefiles/Katsina/Katsina.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
 ### DELTA
@@ -118,9 +133,23 @@ writexl::write_xlsx(katsina_itn_clean, file.path(ITNDir, "cleaned", "pbi_distrib
 # read in ITN data and extracted data
 delta_itn_data <- readxl::read_excel(file.path(ITNDir, "original full ITN datasets/pbi_distribution_Delta.xlsx"))
 delta_extracted_data <- read.csv(file.path(ExtractedDir, "Delta_wards_variables.csv"))
+delta_shapefile <- st_read(file.path(StateShpDir, "Delta/Delta_state.shp"))
 
 delta_itn_clean <- delta_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = TRUE)) %>%
+  ungroup()
+
+# add lga back
+delta_itn_clean <- delta_itn_clean %>%
+  left_join(delta_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+delta_itn_clean <- delta_itn_clean %>% 
   mutate(Ward = case_when(
     Ward == "Aballa/ Inyi/ Onuaboh" ~	"Aballa/Inyi/Onuaboh",
     Ward == "Abbi 1" ~	"Abbi 8",
@@ -205,19 +234,14 @@ delta_itn_clean <- delta_itn_data %>%
     Ward == "Udomi-Azuowa" ~	"Udomi-Azuowa/Abavo II",
     Ward == "Urhuovie" ~	"Urhuovie/Abraka  II",
     TRUE ~ Ward)) %>% 
-  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
-  group_by(Ward) %>%
-  summarise(Population = sum(population, na.rm = TRUE)) %>%
-  ungroup()
+  filter(Ward != "(blank)" &
+         Ward != "Grand Total" &
+         !is.na(Ward) &
+         Ward != "") %>% 
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
-# add lga back
-delta_itn_clean <- delta_itn_clean %>%
-  left_join(delta_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
-
-# identify mismatches
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(delta_itn_clean$Ward)
 extracted_unique <- unique(delta_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -227,8 +251,21 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(delta_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Delta_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(delta_itn_clean$Ward)
+shapefile_unique <- unique(delta_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
 
+# save cleaned ITN data
+writexl::write_xlsx(delta_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Delta_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(delta_shapefile, file.path(PackageDataDir, "shapefiles/Delta/Delta.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
 ### KADUNA
@@ -237,9 +274,23 @@ writexl::write_xlsx(delta_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribut
 # read in ITN data and extracted data
 kaduna_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Kaduna_old.xlsx"))
 kaduna_extracted_data <- read.csv(file.path(ExtractedDir, "Kaduna_wards_variables.csv"))
+kaduna_shapefile <- st_read(file.path(StateShpDir, "Kaduna/Kaduna_state.shp"))
 
 kaduna_itn_clean <- kaduna_itn_data %>%
   rename(Ward = `AdminLevel3`) %>%
+  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = TRUE)) %>%
+  ungroup()
+
+# add lga back
+kaduna_itn_clean <- kaduna_itn_clean %>%
+  left_join(kaduna_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+kaduna_itn_clean <- kaduna_itn_clean %>% 
   mutate(Ward = case_when(
     Ward == "Awan" ~ "Awon",
     Ward == "Badikko" ~ "Badiko",
@@ -252,6 +303,8 @@ kaduna_itn_clean <- kaduna_itn_data %>%
     Ward == "Dandamisa" ~ "Dan Damisa",
     Ward == "Dogon Dawa" ~ "Dogondawa",
     Ward == "Dutse Wai" ~ "Dutsen Wai",
+    Ward == "Garu" ~ "Garu 1",
+    Ward == "G/Gwanki" ~ "Garu 2",
     Ward == "Garu/Mariri" ~ "Garu Mariri",
     Ward == "Gure/Kahugu" ~ "Gure Kahugu",
     Ward == "Gyallesu" ~ "Gyellesu",
@@ -277,6 +330,8 @@ kaduna_itn_clean <- kaduna_itn_data %>%
     Ward == "Ramin/Kura" ~ "Raminkura",
     Ward == "Sab Chem" ~ "Sabchem",
     Ward == "Sab-Zuro" ~ "Sabzuro",
+    Ward == "Sabon Birnin" ~ "Sabon Birnin 1",
+    Ward == "Sabonbirni/U/Bawa" ~ "Sabon Birnin 2",
     Ward == "Sabon Gari" ~ "Sabon Garin",
     Ward == "Sam Ban" ~ "Samban",
     Ward == "Saya-Saya" ~ "Saya Saya",
@@ -295,20 +350,27 @@ kaduna_itn_clean <- kaduna_itn_data %>%
     Ward == "K/Wali South" ~ "Kauran Wali South",
     Ward == "T/Nupawa" ~ "Tudun Nupawa",
     Ward == "Riga Chikun" ~ "Rigachikun",
-    TRUE ~ Ward)) %>%
-  dplyr::select(population = `N_FamilyMembers`, Ward) %>%
-  group_by(Ward) %>%
-  summarise(Population = sum(population, na.rm = TRUE)) %>%
-  ungroup()
+    Ward == "Tudun Jukun" ~ "Tukur Tukur",
+    Ward == "Doka" & LGA == "Kachia" ~ "Dokwa",
+    Ward == "Sabon Garin" & LGA == "Chikun" ~ "Sabon Gari Nassarawa",
+    TRUE ~ Ward)) %>% 
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
-# add lga back
-kaduna_itn_clean <- kaduna_itn_clean %>%
-  left_join(kaduna_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
+### ALSO CLEAN SHAPEFILE FOR KADUNA ###
 
-# identify mismatches
+# recode WardName in yobe_shp to match the ITN data formatting
+kaduna_shapefile <- kaduna_shapefile %>% 
+  mutate(WardName = case_when(
+    WardName == "Garu" & LGACode == 19016 ~ "Garu 1",
+    WardName == "Garu" & LGACode == 19021 ~ "Garu 2",
+    WardName == "Sabon Birnin" & WardCode == "KD0410" ~ "Sabon Birnin 1",
+    WardName == "Sabon Birnin" & WardCode == "KD1710" ~ "Sabon Birnin 2",
+    TRUE ~ WardName
+  )) %>% 
+  arrange(WardName)
+
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(kaduna_itn_clean$Ward)
 extracted_unique <- unique(kaduna_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -318,8 +380,21 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(kaduna_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Kaduna_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(kaduna_itn_clean$Ward)
+shapefile_unique <- unique(kaduna_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
 
+# save cleaned ITN data
+writexl::write_xlsx(kaduna_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Kaduna_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(kaduna_shapefile, file.path(PackageDataDir, "shapefiles/Kaduna/Kaduna_state.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
 ### NIGER
@@ -328,6 +403,7 @@ writexl::write_xlsx(kaduna_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribu
 # read in ITN data and extracted data
 niger_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Niger.csv"))
 niger_extracted_data <- read.csv(file.path(ExtractedDir, "Niger_wards_variables.csv"))
+niger_shapefile <- st_read(file.path(StateShpDir, "Niger/Niger_state.shp"))
 
 niger_itn_clean <- niger_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -335,7 +411,16 @@ niger_itn_clean <- niger_itn_data %>%
   dplyr::select(population, Ward) %>%
   group_by(Ward) %>%
   summarise(Population = sum(population, na.rm = T)) %>%
-  ungroup() %>%
+  ungroup()
+
+# add lga back
+niger_itn_clean <- niger_itn_clean %>%
+  left_join(niger_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+niger_itn_clean <- niger_itn_clean %>% 
   mutate(Ward = case_when(
     Ward == "Adunu" ~ "Adono",
     Ward == "Akare" ~ "Akari",
@@ -356,7 +441,6 @@ niger_itn_clean <- niger_itn_data %>%
     Ward == "Gazhe" ~ "Gazhe 1",
     Ward == "Gupa/Abugi" ~ "Gupa",
     Ward == "Gwarjiko" ~ "Gwarijiko",
-    Ward == "Kafin Koro" ~ "Kafinkoro",
     Ward == "Kuchi Bussu" ~ "Kucibusu",
     Ward == "Kura" ~ "Kura/Auna East",
     Ward == "Kurebe/Kushaka" ~ "Kuregbe",
@@ -406,15 +490,9 @@ niger_itn_clean <- niger_itn_data %>%
     Ward == "Yangalu" ~ "Yangalu/Ibelu East",
     Ward == "Yekila(Gunna)" ~ "Gunna Central",
     Ward == "Kafinkoro" ~ "Kafin Koro",
-    TRUE ~ Ward
-  ))
-
-# add lga back
-niger_itn_clean <- niger_itn_clean %>%
-  left_join(niger_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
+    TRUE ~ Ward)) %>% 
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
 # identify mismatches
 itn_unique <- unique(niger_itn_clean$Ward)
@@ -426,7 +504,21 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(niger_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Niger_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(niger_itn_clean$Ward)
+shapefile_unique <- unique(niger_shapefile$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# save cleaned ITN data
+writexl::write_xlsx(niger_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Niger_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(niger_shapefile, file.path(PackageDataDir, "shapefiles/Niger/Niger.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
 ### TARABA
@@ -441,7 +533,16 @@ taraba_itn_clean <- taraba_itn_data %>%
   rename(Ward = `AdminLevel3`, population = `N_FamilyMembers`) %>%
   dplyr::select(Ward, population) %>%
   group_by(Ward) %>%
-  summarise(Population = sum(population, na.rm = TRUE)) %>%
+  summarise(Population = sum(population, na.rm = TRUE))
+
+# add lga back
+taraba_itn_clean <- taraba_itn_clean %>%
+  left_join(taraba_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+taraba_itn_clean <- taraba_itn_clean %>% 
   mutate(Ward = case_when(
     Ward == "Dampar I" ~ "Dampar 1",
     Ward == "Dampar II" ~ "Dampar 2",
@@ -475,21 +576,28 @@ taraba_itn_clean <- taraba_itn_data %>%
     Ward == "Lama" ~ "Lamma",
     Ward == "Maidanu" ~ "Mai Idanu",
     Ward == "Majindadi" ~ "Majidadi",
-    TRUE ~ Ward
-  )) %>%
+    TRUE ~ Ward)) %>%
   filter(Ward != "(blank)" &
            Ward != "Grand Total" &
            !is.na(Ward) &
-           Ward != "")
+           Ward != "") %>% 
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
-# add lga back
-taraba_itn_clean <- taraba_itn_clean %>%
-  left_join(taraba_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
+### ALSO CLEAN SHAPEFILE FOR TARABA ###
+TarabaDir <- file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/NMEP_nigeria_shapefiles/states/Taraba")
+taraba_shp <- read_sf(file.path(TarabaDir, "Taraba.shp")) %>% 
+  arrange(WardName)
 
-# identify mismatches
+# recode WardName in taraba_shp to match the ITN data formatting
+taraba_shp$WardName <- dplyr::recode(taraba_shp$WardName,
+                                     "Dampar I" = "Dampar 1",
+                                     "Dampar II" = "Dampar 2",
+                                     "Dampar III" = "Dampar 3",
+                                     "Gongon" = "Gongong")
+
+
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(taraba_itn_clean$Ward)
 extracted_unique <- unique(taraba_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -499,7 +607,21 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(taraba_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Taraba_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(taraba_itn_clean$Ward)
+shapefile_unique <- unique(taraba_shp$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# save cleaned ITN data
+writexl::write_xlsx(taraba_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Taraba_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(taraba_shp, file.path(PackageDataDir, "shapefiles/Taraba/Taraba.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
 ### YOBE
@@ -508,13 +630,26 @@ writexl::write_xlsx(taraba_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribu
 # read in ITN data and extracted data
 yobe_itn_data <- readxl::read_excel(file.path(ITNDir, "pbi_distribution_Yobe.xlsx"))
 yobe_extracted_data <- read.csv(file.path(ExtractedDir, "Yobe_wards_variables.csv"))
+yobe_shp <- st_read(file.path(PackageDataDir, "shapefiles/Yobe/Yobe_state.shp"))
 
 yobe_itn_clean <- yobe_itn_data %>%
   rename(population = `N_FamilyMembers`,
          Ward = `AdminLevel3`,
          LGA = AdminLevel2) %>%
+  dplyr::select(population, Ward, LGA) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = T)) %>%
+  ungroup()
+
+# add lga back
+yobe_itn_clean <- yobe_itn_clean %>%
+  left_join(yobe_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2)
+
+yobe_itn_clean <- yobe_itn_clean %>% 
   mutate(Ward = case_when(
-    # Ward name standardization
     Ward == "Asheikiri" ~ "Asheikri",
     Ward == "Balanguwa" ~ "Bulanguwa",
     Ward == "Bare-Bari" ~ "Bare Bari",
@@ -559,20 +694,56 @@ yobe_itn_clean <- yobe_itn_data %>%
     Ward == "Turmi/Maluri" ~ "Turmi Malori",
     Ward == "Yarimaram" ~ "Yerimaram",
     Ward == "Zangaya/Mazawun" ~ "Zangaya Mazawaun",
-    TRUE ~ Ward)) %>%
-  dplyr::select(population, Ward, LGA) %>%
-  group_by(Ward) %>%
-  summarise(Population = sum(population, na.rm = T)) %>%
-  ungroup()
+    TRUE ~ Ward)) %>% 
+  arrange(Ward) %>% 
+  dplyr::select(Ward, LGA, Population)
 
-# add lga back
-yobe_itn_clean <- yobe_itn_clean %>%
-  left_join(yobe_itn_data %>%
-              dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2)
+### ALSO CLEAN SHAPEFILE FOR YOBE ###
+yobe_shp <- read_sf(file.path(DataDir, "nigeria/NMEP_nigeria_shapefiles/states/Yobe/Yobe.shp")) %>% 
+  arrange(WardName)
 
-# identify mismatches
+# recode WardName in yobe_shp to match the ITN data formatting
+yobe_shp$WardName <- dplyr::recode(yobe_shp$WardName,
+                                   "Bare-Bari" = "Bare Bari",
+                                   "Chilariya" = "Chillariye",
+                                   "Chikuiwa" = "Chukuriwa",
+                                   "Danani/Lawanti" = "Danani Lawanti",
+                                   "Darin/Lang" = "Darin Langawa",
+                                   "Dogo Nini" = "Dogon Nini",
+                                   "Dole Machina" = "Dole",
+                                   "Faji Ganari" = "Fajiganari",
+                                   "Falimiram" = "Falimaram",
+                                   "Fika/Anze" = "Fika Anze",
+                                   "Gadaka/Shembire" = "Gadaka/She",
+                                   "Goniri" = "Goneri",
+                                   "Gotala" = "Gotala Gotumba",
+                                   "Guji/Metalari" = "Guji Metalari",
+                                   "Hausawa Asibity" = "Hausawa Asibiti",
+                                   "Jajimaji" = "Jaji Maji",
+                                   "Jawa/Garun Dole" = "Jawa Garun Dole",
+                                   "Julluri" = "Juluri Damnawa",
+                                   "Karasuwa Garin Guna" = "Karausuwa Garin Guna",
+                                   "Kollere PHCC" = "Kollere Kafaje",
+                                   "Koryel" = "Koriyel",
+                                   "Lantaiwa" = "Lantewa",
+                                   "Ma'Anna" = "Ma'anna",
+                                   "Maisandari Waziri Ibrahim" = "Maisandari/Waziri Ibrahim",
+                                   "Majakura" = "Maja Kura",
+                                   "Mari-Mari/Gud" = "Marmari Gudugurka",
+                                   "Moyori" = "Mayori",
+                                   "Mazagon" = "Mozogun",
+                                   "Murfa Kalam" = "Murfakalam",
+                                   "Ngalda/Dumbulwa" = "Ngalda/Dumb",
+                                   "Njiwaji Gwange" = "Njiwaji/Gwange",
+                                   "Sabon Gari Kanuri" = "S G Kanuri",
+                                   "Sabongari" = "Sabon Gari",
+                                   "Shoye/Garin Aba" = "Shoye",
+                                   "Koka/Sungul" = "Sungul Koka",
+                                   "Turmi/Maluri" = "Turmi Malori",
+                                   "Yarimaram" = "Yerimaram",
+                                   "Zangaya/Mazawun" = "Zangaya Mazawaun")
+
+# identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(yobe_itn_clean$Ward)
 extracted_unique <- unique(yobe_extracted_data$WardName)
 missing_in_extracted <- setdiff(itn_unique, extracted_unique)
@@ -582,4 +753,103 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in ITN data:\n")
 print(missing_in_itn)
 
-writexl::write_xlsx(yobe_itn_clean, file.path(ITNDir, "cleaned", "pbi_distribution_Yobe_clean.xlsx"))
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(yobe_itn_clean$Ward)
+shapefile_unique <- unique(yobe_shp$WardName)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# save cleaned ITN data
+writexl::write_xlsx(yobe_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Yobe_clean.xlsx"))
+
+# save cleaned shapefile
+st_write(yobe_shp, file.path(PackageDataDir, "shapefiles/Yobe/Yobe.shp"), delete_layer = TRUE)
+
+
+
+## =========================================================================================================================================
+### ALL STATES SHAPEFILE (by Hephzibah) — use to check on the remaining mismatched wards
+## =========================================================================================================================================
+
+source("add_lga_ward.R")
+
+all_shp <- st_read(file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/NMEP_nigeria_shapefiles/complete_names_wards/wards.shp"))
+
+all_shp <- all_shp %>%
+  group_by(StateCode) %>%
+  arrange(StateCode, WardName, .by_group = TRUE) %>%
+  ungroup() %>% 
+  dplyr::filter(StateCode %in% c("DE", "TA", "YO", "KD", "KT", "NI"))
+
+# make state shapefiles that include LGA
+delta_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "DE") %>% dplyr::select(WardCode, WardName, LGAName))
+taraba_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "TA") %>% dplyr::select(WardCode, WardName, LGAName))
+yobe_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "YO") %>% dplyr::select(WardCode, WardName, LGAName))
+kaduna_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "KD") %>% dplyr::select(WardCode, WardName, LGAName))
+katsina_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "KT") %>% dplyr::select(WardCode, WardName, LGAName))
+niger_lgas <- st_drop_geometry(all_shp %>% dplyr::filter(StateCode == "NI") %>% dplyr::select(WardCode, WardName, LGAName))
+
+# read in cleaned shapefiles and add LGA names to each
+delta_shp <- st_read(file.path(PackageDataDir, "shapefiles/Delta/Delta.shp")) 
+taraba_shp <- st_read(file.path(PackageDataDir, "shapefiles/Taraba/Taraba.shp"))
+yobe_shp <- st_read(file.path(PackageDataDir, "shapefiles/Yobe/Yobe.shp"))
+kaduna_shp <- st_read(file.path(PackageDataDir, "shapefiles/Kaduna/Kaduna.shp"))
+katsina_shp <- st_read(file.path(PackageDataDir, "shapefiles/Katsina/Katsina.shp"))
+niger_shp <- st_read(file.path(PackageDataDir, "shapefiles/Niger/Niger.shp"))
+
+# add LGA names to shapefiles and lists with LGAs
+delta_shp <- clean_shapefile(state_name = "Delta", delta_shp)
+taraba_shp <- clean_shapefile(state_name = "Taraba", taraba_shp)
+yobe_shp <- clean_shapefile(state_name = "Yobe", yobe_shp)
+kaduna_shp <- clean_shapefile(state_name = "Kaduna", kaduna_shp)
+katsina_shp <- clean_shapefile(state_name = "Katsina", katsina_shp)
+niger_shp <- clean_shapefile(state_name = "Niger", niger_shp)
+
+
+delta_shp <- delta_shp %>% left_join(delta_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+taraba_shp <- taraba_shp %>% left_join(taraba_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+yobe_shp <- yobe_shp %>% left_join(yobe_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+kaduna_shp <- kaduna_shp %>% left_join(kaduna_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+katsina_shp <- katsina_shp %>% left_join(katsina_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+niger_shp <- niger_shp %>% left_join(niger_lgas, by = c("WardCode")) %>% dplyr::select(-WardName.y) %>% rename(WardName = WardName.x) %>% arrange(WardName)
+
+# save all cleaned shapefile (now with LGAs!)
+st_write(delta_shp, file.path(PackageDataDir, "shapefiles/Delta/Delta.shp"), delete_layer = TRUE)
+st_write(taraba_shp, file.path(PackageDataDir, "shapefiles/Taraba/Taraba.shp"), delete_layer = TRUE)
+st_write(yobe_shp, file.path(PackageDataDir, "shapefiles/Yobe/Yobe.shp"), delete_layer = TRUE)
+st_write(kaduna_shp, file.path(PackageDataDir, "shapefiles/Kaduna/Kaduna.shp"), delete_layer = TRUE)
+st_write(katsina_shp, file.path(PackageDataDir, "shapefiles/Katsina/Katsina.shp"), delete_layer = TRUE)
+st_write(niger_shp, file.path(PackageDataDir, "shapefiles/Niger/Niger.shp"), delete_layer = TRUE)
+
+
+## =========================================================================================================================================
+### Add LGA names to duplicate wards in the ITN data
+## =========================================================================================================================================
+
+# read in ITN data for all states
+delta_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Katsina_clean.xlsx")) 
+taraba_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Taraba_clean.xlsx")) 
+yobe_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Yobe_clean.xlsx")) 
+kaduna_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Kaduna_clean.xlsx")) 
+katsina_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Katsina_clean.xlsx")) 
+niger_itn <- read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Niger_clean.xlsx")) 
+
+# add LGA names to itn data wards
+delta_itn <- clean_itn_data(state_name = "Delta", delta_itn)
+taraba_itn <- clean_itn_data(state_name = "Taraba", taraba_itn)
+yobe_itn <- clean_itn_data(state_name = "Yobe", yobe_itn)
+kaduna_itn <- clean_itn_data(state_name = "Kaduna", kaduna_itn)
+katsina_itn <- clean_itn_data(state_name = "Katsina", katsina_itn)
+niger_itn <- clean_itn_data(state_name = "Niger", niger_itn)
+
+# save cleaned ITN data for all states
+writexl::write_xlsx(delta_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Delta_clean.xlsx"))
+writexl::write_xlsx(taraba_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Taraba_clean.xlsx"))
+writexl::write_xlsx(yobe_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Yobe_clean.xlsx"))
+writexl::write_xlsx(kaduna_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Kaduna_clean.xlsx"))
+writexl::write_xlsx(katsina_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Katsina_clean.xlsx"))
+writexl::write_xlsx(niger_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Niger_clean.xlsx"))
