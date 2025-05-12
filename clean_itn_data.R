@@ -359,7 +359,7 @@ kaduna_itn_clean <- kaduna_itn_clean %>%
 
 ### ALSO CLEAN SHAPEFILE FOR KADUNA ###
 
-# recode WardName in yobe_shp to match the ITN data formatting
+# recode WardName in shapefile to match the ITN data formatting
 kaduna_shapefile <- kaduna_shapefile %>% 
   mutate(WardName = case_when(
     WardName == "Garu" & LGACode == 19016 ~ "Garu 1",
