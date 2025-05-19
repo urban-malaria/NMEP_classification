@@ -156,7 +156,7 @@ delta_itn_clean <- delta_itn_clean %>%
     Ward == "Abbi 2" ~	"Abbi 9",
     Ward == "Aboh/ Akarai" ~	"Aboh/Akarai",
     Ward == "Abraka" ~	"Abraka I",
-    Ward == "Achalla/Ezukwu/Ogboli" ~	"",
+    Ward == "Achalla/Ezukwu/Ogboli" ~	"Ezukwu/Ogboli/Achalla",
     Ward == "Afor/ Obikwele" ~	"Afor/Obikwele",
     Ward == "Agbarho I" ~	"Agbarho 1",
     Ward == "Agbarho II" ~	"Agbarho 2",
@@ -176,9 +176,8 @@ delta_itn_clean <- delta_itn_clean %>%
     Ward == "Boji Boji Owa 2" ~	"Boji-Boji Owa 2/Owa IV",
     Ward == "Egbo" ~	"Egbo/Agbon  VII",
     Ward == "Egini" ~	"Egini/Ovwian II",
-    Ward == "Egodor" ~	"",
     Ward == "Ejeme/ Egbudu" ~	"Ejeme/Egbudu",
-    Ward == "Ekametagbene/Kalafio" ~	"",
+    Ward == "Ekametagbene/Kalafio" ~	"Kolafiogbene/Ekametagbene",
     Ward == "Ekpan I" ~	"Ekpan 9",
     Ward == "Ekpan II" ~	"Ekpan 10",
     Ward == "Eku" ~	"Eku/Agbon  VI",
@@ -203,7 +202,7 @@ delta_itn_clean <- delta_itn_clean %>%
     Ward == "Ogharefe 3" ~	"Ogharefe 3/Oghara III",
     Ward == "Oghareki 1" ~	"",
     Ward == "Oghareki 2" ~	"",
-    Ward == "Ogor" ~	"",
+    Ward == "Ogor" ~	"Otor-Ogor",
     Ward == "Ogume 1" ~	"Ogume 6",
     Ward == "Ogume 2" ~	"Ogume 7",
     Ward == "Oko-Ogbele" ~	"Oko Ogbele",
@@ -240,6 +239,11 @@ delta_itn_clean <- delta_itn_clean %>%
          Ward != "") %>% 
   arrange(Ward) %>% 
   dplyr::select(Ward, LGA, Population)
+
+# read in new files from after data cleaning to check them
+delta_itn_clean <- readxl::read_excel(file.path(PackageDataDir, "ITN/pbi_distribution_Delta_clean.xlsx"))
+delta_extracted_data <- read.csv(file.path(ExtractedDir, "Delta_wards_variables.csv"))
+delta_shapefile <- st_read(file.path(PackageDataDir, "shapefiles/Delta/Delta.shp"))
 
 # identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(delta_itn_clean$Ward)
@@ -853,3 +857,571 @@ writexl::write_xlsx(yobe_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Yo
 writexl::write_xlsx(kaduna_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Kaduna_clean.xlsx"))
 writexl::write_xlsx(katsina_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Katsina_clean.xlsx"))
 writexl::write_xlsx(niger_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Niger_clean.xlsx"))
+
+
+## =========================================================================================================================================
+### OSUN
+## =========================================================================================================================================
+
+# read in ITN data and extracted data
+osun_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Osun.csv"))
+osun_extracted_data <- read.csv(file.path(ExtractedDir, "Osun_wards_variables.csv")) %>% arrange(ward_name)
+osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/uncleaned/Osun.shp")) %>% arrange(ward_name)
+
+osun_itn_clean <- osun_itn_data %>%
+  rename(population = `N_FamilyMembers`,
+         Ward = `AdminLevel3`,
+         LGA = AdminLevel2) %>%
+  dplyr::select(population, Ward, LGA) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = T)) %>%
+  ungroup()
+
+# add lga back
+osun_itn_clean <- osun_itn_clean %>%
+  left_join(osun_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2) %>% 
+  dplyr::select(LGA, Ward, Population) %>% 
+  arrange(Ward)
+
+# identify mismatches between cleaned ITN data and extracted data
+itn_unique <- unique(osun_itn_clean$Ward)
+extracted_unique <- unique(osun_extracted_data$ward_name)
+missing_in_extracted <- setdiff(itn_unique, extracted_unique)
+missing_in_itn <- setdiff(extracted_unique, itn_unique)
+cat("Wards in ITN data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(osun_itn_clean$Ward)
+shapefile_unique <- unique(osun_shp$ward_name)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# rename wards in itn data to match shapefile
+osun_itn_clean <- osun_itn_clean %>%
+  mutate(Ward = recode(Ward,
+                           "Afolu" = "Afolu/Elerin A",
+                           "Agboora" = "Agbora",
+                           "Ajaota D" = "Ataoja 4/D",
+                           "Akepe" = "Akepe/Eketa",
+                           "Alajue I" = "Alajue 1",
+                           "Alajue Oja II" = "Alajue 2",
+                           "Alapomu II" = "Alapomu 2",
+                           "Aludundun" = "Aludundun/Owode Ikirun",
+                           "Anaye" = "Anaye/Iloro/Roye",
+                           "Anlugbua" = "Obalufon/Anlugbua",
+                           "Anwo" = "Anwo/Elerin B",
+                           "Ara II" = "Ara 2",
+                           "Araromi Owu" = "Araromi/Owu",
+                           "Aromiwe" = "Aromiwe/Olobu D",
+                           "Arowojobe" = "Arowojobe/Arowojobe",
+                           "Asaaoni" = "Asa-Oni",
+                           "Ashi/Asaba" = "Asi/Asaba",
+                           "Asunmon" = "Asunmo",
+                           "Ataoja A" = "Ataoja 1/A",
+                           "Ataoja B" = "Ataoja 2/B",
+                           "Ataoja C" = "Ataoja 3/C",
+                           "Ataoja 4/D" = "Ataoja Iv",
+                           "Atoba" = "Atoba/Ikire A",
+                           "Awala I" = "Awala 1",
+                           "Awala II" = "Awala 2",
+                           "Ayee" = "Aye",
+                           "Ayesan" = "Ogbon Ayesan",
+                           "Baale" = "Baale Okuku",
+                           "Baba Kekere" = "Babakekere",
+                           "Babanla/Agante" = "Babanla/Agate",
+                           "Buhari/Isibo" = "Buari Isibo",
+                           "Cooperative" = "Co-Op",
+                           "Edunabon II" = "Edunabon 2",
+                           "Egan Aaje" = "Ega-Aaje/Osun-Eesa",
+                           "Egbedi" = "Egbe-Idi",
+                           "Eko Ajala/ Ende" = "Eko Ende/Eko Ajala",
+                           "Eleesi" = "Elesi/Olufon Orolu 'G'",
+                           "Erin-Ijesa" = "Erin Jesa",
+                           "Erin-Oke" = "Erin Oke",
+                           "Erinmo" = "Erinmo Jesa",
+                           "Esa Otun" = "Esa/Otunbale",
+                           "Eyingbo" = "Eyingbo/Olobu C",
+                           "Faaji/Opete" = "Faji/Opete",
+                           "Fiditi" = "Fiditi/Ikire J",
+                           "Gbogbo" = "Gbogbo/Ileogbo  IV",
+                           "Gbongan Rural" = "Gbogon Rural",
+                           "Gbonni" = "Gbonmi",
+                           "Gidigbo I" = "Gidigbo 1",
+                           "Gidigbo II" = "Gidigbo 2",
+                           "Gidigbo III" = "Gidigbo 3",
+                           "Iba II" = "Iba 2/II",
+                           "Ibala" = "Ibala/Eesun",
+                           "Idi Ogun" = "Idi-Ogun",
+                           "Idiape" = "Idi Ape",
+                           "Ido Ijesa" = "Ido Jesa",
+                           "Ido-Osun" = "Ido Osun",
+                           "Idooogun" = "Idogun",
+                           "Ifeodan" = "Ife-Odan",
+                           "Ifewara I" = "Ifewara 1",
+                           "Ifewara II" = "Ifewara 2",
+                           "Igbajo I" = "Igbajo 1/Gbeleru Obaala I",
+                           "Igbajo II" = "Igbajo 2",
+                           "Igbajo III" = "Igbajo 3",
+                           "Igbaye/Imuleke" = "Igbayi/Emuleke",
+                           "Ijabe/Ilaodo" = "Ilaodo/Ijabe",
+                           "Ijebu-Ijesa" = "Ijebu Jesa",
+                           "Ijeda/Iloko" = "Iloko Ijeda",
+                           "Ijimoba" = "Ijimoba/Inisa I/Aato/Igbon",
+                           "Ijugbe" = "Ijegbe/Oke-Eso/Oke-Owu Ijugbe",
+                           "Ikeji-Ira" = "Ikeji Ira",
+                           "Ikija I" = "Ikija 1",
+                           "Ikija II" = "Ikija 2",
+                           "Ilare II" = "Ilare 2",
+                           "Ilare III" = "Ilare 3",
+                           "Ilare IV" = "Ilare 4",
+                           "Ile-Ogo/Obamoro" = "Ile Ogo/Obamoro",
+                           "Ilode I" = "Ilode 1",
+                           "Ilode II" = "Ilode 2",
+                           "Iperin Eyindi" = "Iperin/Eyindi",
+                           "Ipetu- Ile" = "Ipetu Ile",
+                           "Ipetu-Ijesa" = "Ipetu Ijesa I",
+                           "Ipetumodu I" = "Ipetumodu 1",
+                           "Ipetumodu II" = "Ipetumodu 2",
+                           "Iragberi I" = "Iragberi 1",
+                           "Iragberi II" = "Iragberi 2",
+                           "Iremo II" = "Iremo 2/Iremo II Eleyele",
+                           "Iremo III" = "Iremo 3",
+                           "Iremo IV" = "Iremo 4",
+                           "Iremo V" = "Iremo 5",
+                           "Iresi I" = "Iresi 1",
+                           "Iresi II" = "Iresi 2",
+                           "Irojo" = "Irojo/Ilerin",
+                           "Isale Ikirun" = "Isale Ikirun/Isale/Oke Afo",
+                           "Isale Oba II" = "Isale Oba 2",
+                           "Isale Oba III" = "Isale Oba 3",
+                           "Isale Oba IV" = "Isale Oba Iv",
+                           "Isale Offa" = "College/Egbada Road/Isale Offa",
+                           "Isale osolo" = "Isale Osolo",
+                           "Isedo I" = "Isedo 1",
+                           "Isedo II" = "Isedo 2",
+                           "Iso Ege" = "Iso-Ege/Ada I",
+                           "Ita - Ofa" = "Ita-Ofa/Omofe/Idasa",
+                           "Iwoye" = "Iwoye Jesa",
+                           "Jagun A" = "Jagun 1",
+                           "Jagun B" = "Jagun 2/B",
+                           "Jagun C" = "Jagun 3/Otun Hagun B",
+                           "Jagun-Jagun" = "Jagun/Jagun",
+                           "Jagun/Osi" = "Jagun Osi Baale",
+                           "Jaleoyemi" = "Jaleyemi",
+                           "Konda" = "Konda/Bara A",
+                           "Lagere" = "Lagere",
+                           "Logun" = "Loogun",
+                           "Modakeke I" = "Modakeke 1",
+                           "Modakeke II" = "Modakeke 2",
+                           "Modakeke III" = "Modakeke 3",
+                           "Molete I" = "Molete 1",
+                           "Molete II" = "Molete 2",
+                           "Molete III" = "Molete 3",
+                           "Moore" = "More",
+                           "Moore/ Jaja" = "Moreojaja",
+                           "Obalende" = "Oba/Ojomo",
+                           "Odogbo" = "Odogbo/Ayegunle",
+                           "Ogbaagbaa 1" = "Ogbagba 1",
+                           "Ogbaagbaa 2" = "Ogbagba 2",
+                           "Oja Osun" = "Oja-Osun",
+                           "Ojo/Aro" = "Aro/Ojo",
+                           "Ojomun" = "Ojomun",
+                           "Oke - Iyin" = "Oke Iyin",
+                           "Oke Adan I" = "Oke Adan 1",
+                           "Oke Adan II" = "Oke Adan 2",
+                           "Oke Adan III" = "Oke Adan 3",
+                           "Oke Afo" = "Oke-Afo",
+                           "Oke Amola" = "Oke Amola/Amola Ikirun",
+                           "Oke Aree" = "Oke-Aree",
+                           "Oke Bale" = "Oke-Baale",
+                           "Oke Balogun" = "Okebalogun/Elejigbo 'D'/Ejemu",
+                           "Oke-Ejigbo I" = "Oke Ejigbo 1",
+                           "Oke-Ejigbo II" = "Oke Ejigbo 2",
+                           "Oke-Ejigbo III" = "Oke Ejigbo 3",
+                           "Okerewe II" = "Okerewe 2",
+                           "Okerewe III" = "Okerewe 3",
+                           "Oke Eran" = "Oke Eran/Elerin E",
+                           "Oke Iba" = "Oke Iba",
+                           "Oke Iro" = "Oke Iro",
+                           "Oke Iroko" = "Oke-Iroko/Eesa Ikirun",
+                           "Oke-Irun" = "Oke-Run",
+                           "Oke Oba II" = "Oke Oba 2",
+                           "Oke Ogi" = "Oke Ogi/Ada II",
+                           "Oke Otan" = "Oke-Otan",
+                           "Oke-Omi" = "Oke Omi",
+                           "Oke Oye" = "Oke-Ooye",
+                           "Okini /Ofatedo/ Olorunsogo" = "Olorunsogo/Offatedo",
+                           "Okiti/ Monlufon" = "Okiti/Molofun/Olufon Orolu 'J'",
+                           "Olla" = "Ola",
+                           "Olobu" = "Olobu/Olobu A",
+                           "Ologun/Agbakin" = "Ologun/Agbaakin",
+                           "Olugun" = "Olugun/Eketa",
+                           "Olonde" = "Olonde/Olonde Ikirun",
+                           "Olunisa" = "Oluinisa",
+                           "Olukotun" = "Olukotun Inisha",
+                           "Olu-Ode" = "Oluode/Owode  I",
+                           "Omisore" = "Omisore/Ileogbo  II",
+                           "Ooye" = "Ooye/Olufon Orolu 'E'",
+                           "Orisunbare" = "Orisunmbare/Balogun",
+                           "Orita-Sabo" = "Orita Sabo/Owode  II",
+                           "Orooruwo" = "Ororuwo",
+                           "Osolo/Oparin" = "Osolo/Oparimo",
+                           "Osu II" = "Osu 2",
+                           "Osu III" = "Osu 3",
+                           "Otan-Ile" = "Otan Ile",
+                           "Oyere II" = "Oyere 2",
+                           "Sabo" = "Sabo/Owoope",
+                           "Sabo/Abogunde I" = "Sabo Agbengbe 1",
+                           "Sabo/Abogunde II" = "Sabo Agbengbe 2",
+                           "Sagba Abogunde" = "Sagba/Abogunde",
+                           "Seriki" = "Seriki/Tokede/Elerin C",
+                           "Sokoto" = "Sokoto/Forest Reserve  II",
+                           "Waasinmi" = "Wasinmi",
+                           "Yakooyo" = "Yakoyo")) 
+                           
+# check for any duplicate ward names in the itn data and shapefile
+
+# add LGA name to duplicated wards in itn data
+duplicated_wards <- osun_itn_clean %>%
+  count(Ward) %>%
+  filter(n > 1) %>%
+  pull(Ward)
+osun_itn_clean <- osun_itn_clean %>%
+  mutate(Ward = if_else(Ward %in% duplicated_wards,
+                        paste0(Ward, " (", LGA, ")"),
+                        Ward))
+
+# add LGA name to duplicated wards in shapefile
+duplicated_wards <- osun_shp %>%
+  count(WardName) %>%
+  filter(n > 1) %>%
+  pull(WardName)
+osun_shp <- osun_shp %>%
+  mutate(Ward = if_else(WardName %in% duplicated_wards,
+                        paste0(WardName, " (", LGA, ")"),
+                        WardName))
+
+# save cleaned versions of itn data and shapefile
+writexl::write_xlsx(osun_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Osun_clean.xlsx"))
+st_write(osun_shp, file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"), delete_layer = TRUE)
+
+
+## =========================================================================================================================================
+### KWARA
+## =========================================================================================================================================
+
+# read in ITN data and extracted data
+kwara_itn_data <- read_excel(file.path(ITNDir, "pbi_distribution_Kwara.xlsx"))
+kwara_extracted_data <- read.csv(file.path(ExtractedDir, "Kwara_wards_variables.csv")) %>% arrange(ward_name)
+kwara_shp <- st_read(file.path(PackageDataDir, "shapefiles/Kwara/uncleaned/Kwara.shp"))
+
+kwara_itn_clean <- kwara_itn_data %>%
+  rename(population = `N_FamilyMembers`,
+         Ward = `AdminLevel3`,
+         LGA = AdminLevel2) %>%
+  dplyr::select(population, Ward, LGA) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = T)) %>%
+  ungroup()
+
+# add lga back
+kwara_itn_clean <- kwara_itn_clean %>%
+  left_join(kwara_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2) %>% 
+  dplyr::select(LGA, Ward, Population) %>% 
+  arrange(Ward)
+
+# identify mismatches between cleaned ITN data and extracted data
+itn_unique <- unique(kwara_itn_clean$Ward)
+extracted_unique <- unique(kwara_extracted_data$ward_name)
+missing_in_extracted <- setdiff(itn_unique, extracted_unique)
+missing_in_itn <- setdiff(extracted_unique, itn_unique)
+cat("Wards in ITN data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(kwara_itn_clean$Ward)
+shapefile_unique <- unique(kwara_shp$ward_name)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# rename wards in itn data to match shapefile
+kwara_itn_clean <- kwara_itn_clean %>%
+  mutate(
+    Ward = recode(Ward,
+                  "Agbeyangi" = "Agbeyangi/Gbadamu",
+                  "Kpada I" = "Kpada 1",
+                  "Magaji Are I" = "Are 1",
+                  "Magaji Are II" = "Are 2",
+                  "Pategi 4" = "Pategi Iv",
+                  "Shawo C" = "Shawo Central",
+                  "Bode/Babane" = "Bode Babane",
+                  "Lade I" = "Lade 1",
+                  "Lade II" = "Lade 2",
+                  "Lade III" = "Lade 3",
+                  "Lafiagi I" = "Lafiagi 1",
+                  "Lafiagi II" = "Lafiagi 2",
+                  "Lafiagi III" = "Lafiagi 3",
+                  "Lafiagi IV" = "Lafiagi 4",
+                  "Tsaragi I" = "Tsaragi 1",
+                  "Tsaragi II" = "Tsaragi 2",
+                  "Tsaragi III" = "Tsaragi 3",
+                  "Share I" = "Share 1",
+                  "Share II" = "Share 2",
+                  "Share III" = "Share 3",
+                  "Share IV" = "Share 4",
+                  "Share V" = "Share 5",
+                  "Balogun Fulani III" = "Balogun Fulani 3",
+                  "Kpada II" = "Kpada 2",
+                  "Kpada III" = "Kpada 3",
+                  "Patigi I" = "Pategi 1",
+                  "Patigi II" = "Pategi Ii",
+                  "Patigi III" = "Pategi 3",
+                  "Patigi IV" = "Pategi 4",
+                  "Ajase I" = "Ajase 1",
+                  "Ajase II" = "Ajase 2",
+                  "Akanbi I" = "Akanbi 1",
+                  "Akanbi II" = "Akanbi 2",
+                  "Akanbi III" = "Akanbi 3",
+                  "Akanbi IV" = "Akanbi 4",
+                  "Akanbi V" = "Akanbi 5",
+                  "Idofian I" = "Idofian 1",
+                  "Idofian II" = "Idofian 2",
+                  "Oro I" = "Oro 1",
+                  "Oro II" = "Oro 2",
+                  "Igbaja I" = "Igbaja 1",
+                  "Igbaja II" = "Igbaja 2",
+                  "Igbaja III" = "Igbaja 3",
+                  "Oke Ode I" = "Oke-Ode 1",
+                  "Oke Ode II" = "Oke-Ode 2",
+                  "Oke Ode III" = "Oke-Ode 3",
+                  "Isanlu I" = "Isanlu 1",
+                  "Isanlu II" = "Isanlu 2",
+                  "Odo - Owa I" = "Odo-Owa 1",
+                  "Odo - Owa II" = "Odo-Owa 2",
+                  "Obbo Aiyegunle I" = "Obbo-Aiyegunle 1",
+                  "Obbo Aiyegunle II" = "Obbo-Aiyegunle 2",
+                  "Idofin Igbona I" = "Idofin/Igbana 1",
+                  "Idofin Igbona II" = "Idofin/Igbana 2",
+                  "Idofin Odo - Ashe" = "Idofin Odoashe",
+                  "Shawo SE" = "Shawo South East",
+                  "Shawo SW" = "Shawo South West",
+                  "Ojomu CB" = "Ojomu Central B",
+                  "Ojomu NNW" = "Ojomu North West",
+                  "Ojomu SE" = "Ojomu South East",
+                  "Kpura/Yakira" = "Kpura/Yakiru",
+                  "Kenu/Taberu" = "Kenu/Tabera",
+                  "Okoerin" = "Oko-Erin",
+                  "Igbo-Idun" = "Igboidun",
+                  "Megida" = "Magida",
+                  "Okesho" = "Okeso",
+                  "Ogbondoroko Reke" = "Ogbondoroko",
+                  "Gambari Ayekale" = "Gambar/Ayekale",
+                  "Budo Egba" = "Budo-Egba",
+                  "Aboto" = "Aboto/Odoode",
+                  "Agunjin" = "Agwijin",
+                  "Ile Ire" = "Ile-Ire",
+                  "Egosi/Imode" = "Imade/Egosi",
+                  "Iliale/Imoji/Erin-Mope" = "Ilale /Erin/Imoji",
+                  "Ayedun I" = "Aiyedun",
+                  "Eruku I" = "Eruku",
+                  "Pakunma" = "Pakuma",
+                  "Ejidongari" = "Egidogari",
+                  "Jehunkunu" = "Jeunkunu",
+                  "Ajanaku" = "Ajanaku/Malete",
+                  "Elebue Awe/Orimaro" = "Awe/Orimaro",
+                  "Ila Oja" = "Ila- Oja",
+                  "Maya Ile Apa" = "Maya/Ileapa",
+                  "Esie/Ijan" = "Esie-Ijan",
+                  "Erin North" = "Erin-North",
+                  "Erin South" = "Erin-South",
+                  "Gwanabe I" = "Gwanabe 1",
+                  "Gwanabe II" = "Gwanabe 2",
+                  "Kaiama I" = "Kaiama 1",
+                  "Kaiama II" = "Kaiama 2",
+                  "Kaiama III" = "Kaiama 3",
+                  "Yashikira" = "Yashikira 1",
+                  "Balogun Fulani I" = "Balogun Fulani 1",
+                  "Balogun Fulani II" = "Balogun Fulani 2",
+                  "Gambari I" = "Gambari 1",
+                  "Gambari II" = "Gambari 2",
+                  "Okaka I" = "Okaka 1",
+                  "Okaka II" = "Okaka 2",
+                  "Osi I" = "Osi 1",
+                  "Osi II" = "Osi 2",
+                  "Kemanji" = "Kemaji",
+                  "Ilemona" = "Ilemoma",
+                  "Okeweru Yowere II" = "Okeweru/Yow 2",
+                  "Pamo/Oba/Sabaja" = "Sabaja/Pama/Oba",
+                  "Ojomu CA" = "Ojomo Central A",
+                  "Ojomu Central B" = "Ojomo Central B",
+                  "Oke-Ogun" = "Oka-Ogun",
+                  "Oke-Oyi/Oke Ose" = "Oke Oyi/Oke-Ose/Alalubosa",
+                  "Share 4" = "Share Iv",
+                  "Shinau/Tumuyan" = "Sinawu/Tumbiya",
+                  "Zango" = "Zango 1",
+                  "Igbonna" = "Igbomma",
+                  "Zarumi/Ojueku" = "Oju-Ekun",
+                  "Ikotun" = "Ikotun-Kwara"
+    )
+  )
+
+# check for any duplicate ward names in the itn data and shapefile
+
+# add LGA name to duplicated wards in itn data
+duplicated_wards <- kwara_itn_clean %>%
+  count(Ward) %>%
+  filter(n > 1) %>%
+  pull(Ward)
+kwara_itn_clean <- kwara_itn_clean %>%
+  mutate(Ward = if_else(Ward %in% duplicated_wards,
+                        paste0(Ward, " (", LGA, ")"),
+                        Ward))
+
+# add LGA name to duplicated wards in shapefile
+duplicated_wards <- kwara_shp %>%
+  count(WardName) %>%
+  filter(n > 1) %>%
+  pull(WardName)
+kwara_shp <- kwara_shp %>%
+  mutate(Ward = if_else(WardName %in% duplicated_wards,
+                        paste0(WardName, " (", LGA, ")"),
+                        WardName))
+
+# save cleaned versions of itn data and shapefile
+writexl::write_xlsx(kwara_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Kwara_clean.xlsx"))
+st_write(kwara_shp, file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"), delete_layer = TRUE)
+
+## =========================================================================================================================================
+### ADAMAWA
+## =========================================================================================================================================
+
+# read in ITN data and extracted data
+adamawa_itn_data <- read_excel(file.path(ITNDir, "pbi_distribution_GRDI3_Adamawa.xlsx"))
+adamawa_extracted_data <- read.csv(file.path(ExtractedDir, "Adamawa_wards_variables.csv")) %>% arrange(ward_name)
+adamawa_shp <- st_read(file.path(PackageDataDir, "shapefiles/Adamawa/uncleaned/Adamawa.shp"))
+
+adamawa_itn_clean <- adamawa_itn_data %>%
+  rename(population = `N_FamilyMembers`,
+         Ward = `AdminLevel3`,
+         LGA = AdminLevel2) %>%
+  dplyr::select(population, Ward, LGA) %>%
+  group_by(Ward) %>%
+  summarise(Population = sum(population, na.rm = T)) %>%
+  ungroup()
+
+# add lga back
+adamawa_itn_clean <- adamawa_itn_clean %>%
+  left_join(adamawa_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
+  rename(LGA = AdminLevel2) %>% 
+  dplyr::select(LGA, Ward, Population) %>% 
+  arrange(Ward)
+
+# identify mismatches between cleaned ITN data and extracted data
+itn_unique <- unique(adamawa_itn_clean$Ward)
+extracted_unique <- unique(adamawa_extracted_data$ward_name)
+missing_in_extracted <- setdiff(itn_unique, extracted_unique)
+missing_in_itn <- setdiff(extracted_unique, itn_unique)
+cat("Wards in ITN data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in ITN data:\n")
+print(missing_in_itn)
+
+# identify mismatches between cleaned ITN data and shapefile
+itn_unique <- unique(adamawa_itn_clean$Ward)
+shapefile_unique <- unique(adamawa_shp$ward_name)
+missing_in_shapefile <- setdiff(itn_unique, shapefile_unique)
+missing_in_itn <- setdiff(shapefile_unique, itn_unique)
+cat("Wards in ITN data but not in shapefile:\n")
+print(missing_in_shapefile)
+cat("\nWards in shapefile but not in ITN data:\n")
+print(missing_in_itn)
+
+# rename wards in itn data to match shapefile
+adamawa_itn_clean <- adamawa_itn_clean %>%
+  mutate(Ward = recode(Ward,
+                            "Purokayo" = "Purakayo",
+                            "Futu" = "Futuless",
+                            "Garta/Ghumchi" = "Garta",
+                            "Wagga" = "Waga-Chakawa",
+                            "Gamadio" = "Gamadiyo",
+                            "Mbulo" = "Mbullo",
+                            "Gaya Sikalmi" = "Gaya-Sikalmi",
+                            "Ganye II" = "Ganye 2",
+                            "Koma 11" = "Koma 2",
+                            "Minkisi Wurongiki" = "Ninkisi/Wuro Ngiki",
+                            "Moda Dlaka" = "Moda/Dlaka",
+                            "Tumbara Ngabiu" = "Tumbara/Ngabili",
+                            "Hosherezum" = "Hoserezum",
+                            "Wulla" = "Wula",
+                            "Ngbebongun" = "Ngbebogun",
+                            "Gurum Pawo" = "Gurumpawo",
+                            "Ganye I" = "Ganye 1",
+                            "Mayo Ine" = "Mayo Inne",
+                            "Nyibango" = "Nyibago",
+                            "Yelli" = "Yeli",
+                            "Jada 11" = "Jada 2",
+                            "Gangfada" = "Gang Fada",
+                            "Uki-Tuki" = "Uki Tuki",
+                            "Bolki" = "Bwalki",
+                            "N/Demsa" = "Nassarawo Demsa",
+                            "Jerabonyo" = "Jera Bonyo",
+                            "Girei 11" = "Girei 2",
+                            "Dubwange" = "Dubange",
+                            "Ngbakowo" = "Ngbakawo",
+                            "Waltadi" = "Waltandi",
+                            "Mayo-Nguli" = "Mayo Nguli",
+                            "Nuduku" = "Nduku",
+                            "Gabun" = "Gabon",
+                            "Mayolope" = "Mayo Lope",
+                            "Munkafachitta" = "Munkavachitta",
+                            "Wambilmi/Tilli" = "Wambilimi/Tili",
+                            "Tsukumu/Tillijoh" = "Tsukumu/Tilijo",
+                            "Vih Bokka" = "Vih/Boka"
+  ))
+# check for any duplicate ward names in the itn data and shapefile
+
+
+# add LGA name to duplicated wards in itn data
+duplicated_wards <- adamawa_itn_clean %>%
+  count(Ward) %>%
+  filter(n > 1) %>%
+  pull(Ward)
+adamawa_itn_clean <- adamawa_itn_clean %>%
+  mutate(Ward = if_else(Ward %in% duplicated_wards,
+                        paste0(Ward, " (", LGA, ")"),
+                        Ward))
+
+# add LGA name to duplicated wards in shapefile
+duplicated_wards <- adamawa_shp %>%
+  count(WardName) %>%
+  filter(n > 1) %>%
+  pull(WardName)
+adamawa_shp <- adamawa_shp %>%
+  mutate(Ward = if_else(WardName %in% duplicated_wards,
+                        paste0(WardName, " (", LGA, ")"),
+                        WardName))
+
+# save cleaned versions of itn data and shapefile
+writexl::write_xlsx(adamawa_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Adamawa_clean.xlsx"))
+st_write(adamawa_shp, file.path(PackageDataDir, "shapefiles/Adamawa/Adamawa.shp"), delete_layer = TRUE)

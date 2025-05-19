@@ -5,25 +5,28 @@
 # ==========================================================================================================================================
 
 source("load_path.R")
+PackageDataDir <- file.path(DriveDir, "data/nigeria/R_package_data")
 
 # read in state shapefiles
-kaduna_shp <- sf::st_read(file.path(StateShpDir ,"Kaduna", "Kaduna_State.shp"))
-katsina_shp <- sf::st_read(file.path(StateShpDir ,"Katsina", "Katsina_State.shp"))
-niger_shp <- sf::st_read(file.path(StateShpDir ,"Niger", "Niger_State.shp"))
-taraba_shp <- sf::st_read(file.path(StateShpDir ,"Taraba", "Taraba_State.shp"))
-yobe_shp <- sf::st_read(file.path(StateShpDir ,"Yobe", "Yobe_State.shp"))
+kaduna_shp <- sf::st_read(file.path(PackageDataDir, "shapefiles/Kaduna/Kaduna.shp"))
+katsina_shp <- sf::st_read(file.path(PackageDataDir, "shapefiles/Katsina/Katsina.shp"))
+niger_shp   <- sf::st_read(file.path(PackageDataDir, "shapefiles/Niger/Niger.shp"))
+taraba_shp  <- sf::st_read(file.path(PackageDataDir, "shapefiles/Taraba/Taraba.shp"))
+yobe_shp    <- sf::st_read(file.path(PackageDataDir, "shapefiles/Yobe/Yobe.shp"))
+delta_shp   <- sf::st_read(file.path(PackageDataDir, "shapefiles/Delta/Delta.shp"))
 # kano_shp <- sf::st_read(file.path(StateShpDir ,"Kano", "Kano_State.shp"))
 kano_shp <- sf::st_read(file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/data/nigeria/nigeria_shapefiles/shapefiles/ShinyApp_shapefiles/Kano_metro/Kano_metro.shp"))
 kano_shp <- sf::st_set_crs(kano_shp, 4326)
 kano_shp <- sf::st_transform(kano_shp, 4326)
 
 # read in extracted data for each state
-kaduna_data <- read.csv(file.path(OutputsDir, "Final Extractions/kaduna_plus.csv"))
-katsina_data <- read.csv(file.path(OutputsDir, "Final Extractions/katsina_plus.csv"))
-niger_data <- read.csv(file.path(OutputsDir, "Final Extractions/niger_plus.csv"))
-taraba_data <- read.csv(file.path(OutputsDir, "Final Extractions/taraba_plus.csv"))
-yobe_data <- read.csv(file.path(OutputsDir, "Final Extractions/yobe_plus.csv"))
-kano_data <- read.csv(file.path(OutputsDir, "Final Extractions/kano_plus.csv"))
+kaduna_data <- read.csv(file.path(PackageDataDir, "extractions/Kaduna_extracted_data_plus.csv"))
+katsina_data <- read.csv(file.path(PackageDataDir, "extractions/Katsina_extracted_data_plus.csv"))
+niger_data   <- read.csv(file.path(PackageDataDir, "extractions/Niger_extracted_data_plus.csv"))
+taraba_data  <- read.csv(file.path(PackageDataDir, "extractions/Taraba_extracted_data_plus.csv"))
+yobe_data    <- read.csv(file.path(PackageDataDir, "extractions/Yobe_extracted_data_plus.csv"))
+delta_data   <- read.csv(file.path(PackageDataDir, "extractions/Delta_extracted_data_plus.csv"))
+#kano_data <- read.csv(file.path(OutputsDir, "Final Extractions/kano_plus.csv"))
 
 
 # list of variables to map
@@ -95,21 +98,23 @@ map_variable <- function(shapefile, data, state_name, output_dir, vars) {
 
 # define state shapefiles and data
 state_shapefiles <- list(
-  # "Kaduna" = kaduna_shp,
-  # "Katsina" = katsina_shp,
-  # "Niger" = niger_shp,
-  # "Taraba" = taraba_shp,
-  # "Yobe" = yobe_shp,
-  "Kano" = kano_shp
+  "Kaduna" = kaduna_shp,
+  "Katsina" = katsina_shp,
+  "Niger" = niger_shp,
+  "Taraba" = taraba_shp,
+  "Yobe" = yobe_shp,
+  #"Kano" = kano_shp
+  "Delta" = delta_shp
 )
 
 state_data <- list(
-  # "Kaduna" = kaduna_data,
-  # "Katsina" = katsina_data,
-  # "Niger" = niger_data,
-  # "Taraba" = taraba_data,
-  # "Yobe" = yobe_data,
-  "Kano" = kano_data
+  "Kaduna" = kaduna_data,
+  "Katsina" = katsina_data,
+  "Niger" = niger_data,
+  "Taraba" = taraba_data,
+  "Yobe" = yobe_data,
+  #"Kano" = kano_data
+ "Delta" = delta_data
 )
 
 plotsDir <- file.path(plotsDir, "covariate maps")
