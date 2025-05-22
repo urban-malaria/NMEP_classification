@@ -962,28 +962,28 @@ osun_itn_clean <- osun_itn_data %>%
 #   rename(LGA = AdminLevel2) %>%
 #   dplyr::select(LGA, Ward, Population, AvgLatitude, AvgLongitude) %>%
 #   arrange(Ward)
-
-# average lat and long to get a single coordinate per ward (using this for data cleaning)
-osun_itn_clean <- osun_itn_data %>%
-  rename(population = `N_FamilyMembers`,
-         Ward = `AdminLevel3`,
-         LGA = AdminLevel2) %>%
-  group_by(Ward, LGA) %>%
-  summarise(
-    Population = sum(population, na.rm = TRUE),
-    AvgLatitude = mean(AvgLatitude, na.rm = TRUE),
-    AvgLongitude = mean(AvgLongitude, na.rm = TRUE)
-  ) %>%
-  ungroup() %>%
-  arrange(Ward)
-
-# osun_itn_clean <- osun_itn_clean %>%
-#   left_join(osun_itn_data %>%
-#               dplyr::select(AdminLevel3, AdminLevel2) %>%
-#               distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-#   rename(LGA = AdminLevel2) %>% 
-#   dplyr::select(LGA, Ward, Population) %>% 
+# 
+# # average lat and long to get a single coordinate per ward (using this for data cleaning)
+# osun_itn_clean <- osun_itn_data %>%
+#   rename(population = `N_FamilyMembers`,
+#          Ward = `AdminLevel3`,
+#          LGA = AdminLevel2) %>%
+#   group_by(Ward, LGA) %>%
+#   summarise(
+#     Population = sum(population, na.rm = TRUE),
+#     AvgLatitude = mean(AvgLatitude, na.rm = TRUE),
+#     AvgLongitude = mean(AvgLongitude, na.rm = TRUE)
+#   ) %>%
+#   ungroup() %>%
 #   arrange(Ward)
+
+osun_itn_clean <- osun_itn_clean %>%
+  left_join(osun_itn_data %>%
+              dplyr::select(AdminLevel3, AdminLevel2) %>%
+              distinct(), by = c("Ward" = "AdminLevel3")) %>%
+  rename(LGA = AdminLevel2) %>%
+  dplyr::select(LGA, Ward, Population) %>%
+  arrange(Ward)
 
 # identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(osun_itn_clean$Ward)
@@ -1022,6 +1022,7 @@ osun_itn_clean <- osun_itn_clean %>%
                            "Anwo" = "Anwo/Elerin B",
                            "Ara II" = "Ara 2",
                            "Araromi Owu" = "Araromi/Owu",
+                           "Adio/Kuelu" = "Adeo/Bara B",
                            "Aromiwe" = "Aromiwe/Olobu D",
                            "Arowojobe" = "Arowojobe/Arowojobe",
                            "Asaaoni" = "Asa-Oni",
@@ -1119,7 +1120,7 @@ osun_itn_clean <- osun_itn_clean %>%
                            "Jagun/Osi" = "Jagun Osi Baale",
                            "Jaleoyemi" = "Jaleyemi",
                            "Konda" = "Konda/Bara A",
-                           "Lagere" = "Lagere",
+                           "Lagere" = "Ijugbe/Amola",
                            "Logun" = "Loogun",
                            "Modakeke I" = "Modakeke 1",
                            "Modakeke II" = "Modakeke 2",
@@ -1151,7 +1152,7 @@ osun_itn_clean <- osun_itn_clean %>%
                            "Okerewe II" = "Okerewe 2",
                            "Okerewe III" = "Okerewe 3",
                            "Oke Eran" = "Oke Eran/Elerin E",
-                           "Oke Iba" = "Oke Iba",
+                           "Oke Iba" = "Eweta/Okeba Ikirun",
                            "Oke Iro" = "Oke Iro",
                            "Oke Iroko" = "Oke-Iroko/Eesa Ikirun",
                            "Oke-Irun" = "Oke-Run",
@@ -1187,9 +1188,70 @@ osun_itn_clean <- osun_itn_clean %>%
                            "Sagba Abogunde" = "Sagba/Abogunde",
                            "Seriki" = "Seriki/Tokede/Elerin C",
                            "Sokoto" = "Sokoto/Forest Reserve  II",
+                           "Tokede" = "Irepodun",
                            "Waasinmi" = "Wasinmi",
-                           "Yakooyo" = "Yakoyo")) 
-                           
+                           "Yakooyo" = "Yakoyo"))
+
+osun_itn_clean <- osun_itn_clean %>% 
+  mutate(Ward = case_when(
+    Ward == "Araromi" & LGA == "Orolu" ~ "Araromi/Olufon Orolu 'C'",
+    Ward == "Balogun" & LGA == "Irepodun" ~ "Balogun Jagba/Elerin D",
+    Ward == "Popo" & LGA == "Osogbo" ~ "Popo/Otun Jagun 'A'",
+    TRUE ~ Ward
+  ))
+
+# map duplicated wards
+# filter coordinates for missing wards
+missing_coords <- osun_itn_clean %>%
+  filter(Ward %in% missing_in_shapefile) %>%
+  distinct(Ward, AvgLatitude, AvgLongitude) %>%
+  mutate(
+    AvgLatitude = as.numeric(AvgLatitude),
+    AvgLongitude = as.numeric(AvgLongitude)
+  )
+# convert to sf using WGS 84 (lat/lon)
+missing_coords_sf <- st_as_sf(missing_coords,
+                              coords = c("AvgLongitude", "AvgLatitude"),
+                              crs = 4326) # WGS 84
+# transform to match shapefile CRS
+missing_coords_transformed <- st_transform(missing_coords_sf, st_crs(kwara_shp))
+# plot
+map1 <- ggplot() +
+  geom_sf(data = osun_shp, fill = "gray90", color = "white") +
+  geom_sf(data = missing_coords_transformed, color = "#E41A1C", size = 1) +
+  # geom_sf_text(data = missing_coords_transformed,
+  #              aes(label = Ward),
+  #              size = 3, hjust = -0.1, vjust = 0, color = "black") +
+  theme_minimal() +
+  labs(title = "Wards in ITN Data but Not in Shapefile",
+       x = "", y = "")
+print(map1)
+
+# map 2: wards in shapefile but not in ITN data
+# subset the shapefile for only wards missing in ITN
+missing_sf <- osun_shp %>%
+  filter(ward_name %in% "missing_in_itn")
+# calculate centroids for label placement
+missing_centroids <- st_centroid(missing_sf)
+# create the map
+map2 <- osun_shp %>%
+  mutate(highlight = ifelse(ward_name %in% missing_in_itn, "Highlight", "Other")) %>%
+  ggplot() +
+  geom_sf(aes(fill = highlight), color = "white") +
+  scale_fill_manual(values = c("Highlight" = "#377EB8", "Other" = "gray90")) +
+  # geom_label_repel(data = missing_centroids,
+  #                  aes(label = ward_name,
+  #                      x = st_coordinates(geometry)[,1],
+  #                      y = st_coordinates(geometry)[,2]),
+  #                  size = 3,
+  #                  color = "black",
+  #                  segment.color = "black",
+  #                  max.overlaps = Inf,
+  #                  seed = 1234) +
+  theme_minimal() +
+  labs(title = "Wards in Shapefile but Not in ITN Data", fill = "")
+print(map2)
+
 # check for any duplicate ward names in the itn data and shapefile
 
 # add LGA name to duplicated wards in itn data
@@ -1199,7 +1261,7 @@ duplicated_wards <- osun_itn_clean %>%
   pull(Ward)
 osun_itn_clean <- osun_itn_clean %>%
   mutate(Ward = if_else(Ward %in% duplicated_wards,
-                        paste0(Ward, " (", LGA, ")"),
+                        paste0(Ward, " (", LGA, " LGA)"),
                         Ward))
 
 # add LGA name to duplicated wards in shapefile
@@ -1213,7 +1275,7 @@ osun_shp <- osun_shp %>%
                         ward_name))
 
 # save cleaned versions of itn data and shapefile
-writexl::write_xlsx(osun_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Osun_clean.xlsx"))
+writexl::write_xlsx(osun_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Osun_clean.xlsx"))
 st_write(osun_shp, file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"), delete_layer = TRUE)
 
 
@@ -1224,7 +1286,7 @@ st_write(osun_shp, file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"), delete
 # read in ITN data and extracted data
 kwara_itn_data <- read_excel(file.path(ITNDir, "pbi_distribution_Kwara.xlsx"))
 kwara_extracted_data <- read.csv(file.path(ExtractedDir, "Kwara_wards_variables.csv")) %>% arrange(ward_name)
-kwara_shp <- st_read(file.path(PackageDataDir, "shapefiles/Kwara/uncleaned/Kwara.shp"))
+kwara_shp <- st_read(file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"))
 
 kwara_itn_clean <- kwara_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -1239,10 +1301,36 @@ kwara_itn_clean <- kwara_itn_data %>%
 kwara_itn_clean <- kwara_itn_clean %>%
   left_join(kwara_itn_data %>%
               dplyr::select(AdminLevel3, AdminLevel2) %>%
-              distinct(), by = c("Ward" = "AdminLevel3")) %>% 
-  rename(LGA = AdminLevel2) %>% 
-  dplyr::select(LGA, Ward, Population) %>% 
+              distinct(), by = c("Ward" = "AdminLevel3")) %>%
+  rename(LGA = AdminLevel2) %>%
+  dplyr::select(LGA, Ward, Population) %>%
   arrange(Ward)
+
+# # add lga back
+# kwara_itn_clean <- kwara_itn_clean %>%
+#   left_join(
+#     kwara_itn_data %>%
+#       dplyr::select(AdminLevel3, AdminLevel2, AvgLatitude, AvgLongitude) %>%
+#       distinct(),
+#     by = c("Ward" = "AdminLevel3")
+#   ) %>%
+#   rename(LGA = AdminLevel2) %>%
+#   dplyr::select(LGA, Ward, Population, AvgLatitude, AvgLongitude) %>%
+#   arrange(Ward)
+# 
+# # average lat and long to get a single coordinate per ward (using this for data cleaning)
+# kwara_itn_clean <- kwara_itn_data %>%
+#   rename(population = `N_FamilyMembers`,
+#          Ward = `AdminLevel3`,
+#          LGA = AdminLevel2) %>%
+#   group_by(Ward, LGA) %>%
+#   summarise(
+#     Population = sum(population, na.rm = TRUE),
+#     AvgLatitude = mean(AvgLatitude, na.rm = TRUE),
+#     AvgLongitude = mean(AvgLongitude, na.rm = TRUE)
+#   ) %>%
+#   ungroup() %>%
+#   arrange(Ward)
 
 # identify mismatches between cleaned ITN data and extracted data
 itn_unique <- unique(kwara_itn_clean$Ward)
@@ -1269,12 +1357,13 @@ kwara_itn_clean <- kwara_itn_clean %>%
   mutate(
     Ward = recode(Ward,
                   "Agbeyangi" = "Agbeyangi/Gbadamu",
+                  "Share 4" = "Share Iv",
+                  "Share IV" = "Share Iv",
                   "Ahogbada" = "Aho",
                   "Shonga I" = "Tsonga 1",
                   "Shonga II" = "Tsonga 2",
                   "Shonga III" = "Tsonga 3",
                   "Pategi 4" = "Pategi Iv",
-                  "Share 4" = "Share Iv",
                   "Ojomu Central B" = "Ojomo Central B",
                   "Kpada I" = "Kpada 1",
                   "Magaji Are I" = "Are 1",
@@ -1295,7 +1384,6 @@ kwara_itn_clean <- kwara_itn_clean %>%
                   "Share I" = "Share 1",
                   "Share II" = "Share 2",
                   "Share III" = "Share 3",
-                  "Share IV" = "Share 4",
                   "Share V" = "Share 5",
                   "Balogun Fulani III" = "Balogun Fulani 3",
                   "Kpada II" = "Kpada 2",
@@ -1383,14 +1471,60 @@ kwara_itn_clean <- kwara_itn_clean %>%
                   "Ojomu Central B" = "Ojomo Central B",
                   "Oke-Ogun" = "Oka-Ogun",
                   "Oke-Oyi/Oke Ose" = "Oke Oyi/Oke-Ose/Alalubosa",
-                  "Share 4" = "Share Iv",
                   "Shinau/Tumuyan" = "Sinawu/Tumbiya",
                   "Zango" = "Zango 1",
                   "Igbonna" = "Igbomma",
                   "Zarumi/Ojueku" = "Oju-Ekun",
-                  "Ikotun" = "Ikotun-Kwara"
+                  "Ikotun" = "Ikotun-Kwara",
+                  "Gure/Giwasorio" = "Yashikira 2"
     )
   )
+
+kwara_itn_clean <- kwara_itn_clean %>% 
+  mutate(Ward = case_when(
+    Ward == "Ira" & LGA == "Irepodun" ~ "Ipetu/Rore/Aran Orin",
+    TRUE ~ Ward
+  ))
+
+# map duplicated wards
+# filter coordinates for missing wards
+missing_coords <- kwara_itn_clean %>%
+  filter(Ward %in% missing_in_shapefile) %>%
+  distinct(Ward, AvgLatitude, AvgLongitude) %>%
+  mutate(
+    AvgLatitude = as.numeric(AvgLatitude),
+    AvgLongitude = as.numeric(AvgLongitude)
+  )
+# convert to sf using WGS 84 (lat/lon)
+missing_coords_sf <- st_as_sf(missing_coords,
+                              coords = c("AvgLongitude", "AvgLatitude"),
+                              crs = 4326) # WGS 84
+# transform to match shapefile CRS
+missing_coords_transformed <- st_transform(missing_coords_sf, st_crs(kwara_shp))
+# plot
+map1 <- ggplot() +
+  geom_sf(data = kwara_shp, fill = "gray90", color = "white") +
+  geom_sf(data = missing_coords_transformed, color = "#E41A1C", size = 3) +
+  geom_sf_text(data = missing_coords_transformed,
+               aes(label = Ward),
+               size = 3, hjust = -0.1, vjust = 0, color = "black") +
+  theme_minimal() +
+  labs(title = "Wards in ITN Data but Not in Shapefile",
+       x = "", y = "")
+print(map1)
+
+# map 2: wards in shapefile but not in ITN data
+map2 <- kwara_shp %>%
+  mutate(highlight = ifelse(ward_name %in% missing_in_itn, "Highlight", "Other")) %>%
+  ggplot() +
+  geom_sf(aes(fill = highlight), color = "white") +
+  scale_fill_manual(values = c("Highlight" = "#377EB8", "Other" = "gray90")) +
+  geom_sf_text(data = . %>% filter(ward_name %in% missing_in_itn),
+               aes(label = ward_name), size = 3, color = "black") +
+  theme_minimal() +
+  labs(title = "Wards in Shapefile but Not in ITN Data",
+       fill = "")
+print(map2)
 
 # check for any duplicate ward names in the itn data and shapefile
 
@@ -1415,7 +1549,7 @@ kwara_shp <- kwara_shp %>%
                         ward_name))
 
 # save cleaned versions of itn data and shapefile
-writexl::write_xlsx(kwara_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Kwara_clean.xlsx"))
+writexl::write_xlsx(kwara_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Kwara_clean.xlsx"))
 st_write(kwara_shp, file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"), delete_layer = TRUE)
 
 ## =========================================================================================================================================
@@ -1525,7 +1659,7 @@ duplicated_wards <- adamawa_itn_clean %>%
   pull(Ward)
 adamawa_itn_clean <- adamawa_itn_clean %>%
   mutate(Ward = if_else(Ward %in% duplicated_wards,
-                        paste0(Ward, " (", LGA, ")"),
+                        paste0(Ward, " (", LGA, " LGA)"),
                         Ward))
 
 # add LGA name to duplicated wards in shapefile
@@ -1539,5 +1673,5 @@ adamawa_shp <- adamawa_shp %>%
                         ward_name))
 
 # save cleaned versions of itn data and shapefile
-writexl::write_xlsx(adamawa_itn, file.path(PackageDataDir, "ITN/pbi_distribution_Adamawa_clean.xlsx"))
+writexl::write_xlsx(adamawa_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Adamawa_clean.xlsx"))
 st_write(adamawa_shp, file.path(PackageDataDir, "shapefiles/Adamawa/Adamawa.shp"), delete_layer = TRUE)
