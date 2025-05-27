@@ -940,7 +940,7 @@ writexl::write_xlsx(niger_itn, file.path(PackageDataDir, "ITN/pbi_distribution_N
 # read in ITN data and extracted data
 osun_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Osun.csv"))
 osun_extracted_data <- read.csv(file.path(ExtractedDir, "Osun_wards_variables.csv")) %>% arrange(ward_name)
-osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/uncleaned/Osun.shp")) %>% arrange(ward_name)
+osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/Osun.shp")) %>% arrange(ward_name)
 
 osun_itn_clean <- osun_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -1274,6 +1274,22 @@ osun_shp <- osun_shp %>%
                         paste0(ward_name, " (", lga_name, " LGA)"),
                         ward_name))
 
+# rename variables in osun shapefile to match the other states
+osun_shp <- osun_shp %>% 
+  dplyr::rename(
+    StateCode = state_code,
+    LGAName = lga_name,
+    LGACode = lga_code,
+    WardName = ward_name,
+    WardCode = ward_code,
+    GlobalID = global_id,
+    Source = source,
+    Properties = properties,
+    Population = population,
+    Geometry = geometry
+  ) %>% 
+  dplyr::select(-country_na, -country_co, -state_name, -source_dat)
+
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(osun_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Osun_clean.xlsx"))
 st_write(osun_shp, file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"), delete_layer = TRUE)
@@ -1548,6 +1564,22 @@ kwara_shp <- kwara_shp %>%
                         paste0(ward_name, " (", LGA, ")"),
                         ward_name))
 
+# rename variables in kwara shapefile to match the other states
+kwara_shp <- kwara_shp %>% 
+  dplyr::rename(
+    StateCode = state_code,
+    LGAName = lga_name,
+    LGACode = lga_code,
+    WardName = ward_name,
+    WardCode = ward_code,
+    GlobalID = global_id,
+    Source = source,
+    Properties = properties,
+    Population = population,
+    Geometry = geometry
+  ) %>% 
+  dplyr::select(-country_na, -country_co, -state_name, -source_dat)
+
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(kwara_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Kwara_clean.xlsx"))
 st_write(kwara_shp, file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"), delete_layer = TRUE)
@@ -1559,7 +1591,7 @@ st_write(kwara_shp, file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"), del
 # read in ITN data and extracted data
 adamawa_itn_data <- read_excel(file.path(ITNDir, "pbi_distribution_GRDI3_Adamawa.xlsx"))
 adamawa_extracted_data <- read.csv(file.path(ExtractedDir, "Adamawa_wards_variables.csv")) %>% arrange(ward_name)
-adamawa_shp <- st_read(file.path(PackageDataDir, "shapefiles/Adamawa/uncleaned/Adamawa.shp"))
+adamawa_shp <- st_read(file.path(PackageDataDir, "shapefiles/Adamawa/Adamawa.shp"))
 
 adamawa_itn_clean <- adamawa_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -1671,6 +1703,22 @@ adamawa_shp <- adamawa_shp %>%
   mutate(ward_name = if_else(ward_name %in% duplicated_wards,
                         paste0(ward_name, " (", lga_name, " LGA)"),
                         ward_name))
+
+# rename variables in adamawa shapefile to match the other states
+adamawa_shp <- adamawa_shp %>% 
+  dplyr::rename(
+    StateCode = state_code,
+    LGAName = lga_name,
+    LGACode = lga_code,
+    WardName = ward_name,
+    WardCode = ward_code,
+    GlobalID = global_id,
+    Source = source,
+    Properties = properties,
+    Population = population,
+    Geometry = geometry
+  ) %>% 
+  dplyr::select(-country_na, -country_co, -state_name, -source_dat)
 
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(adamawa_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Adamawa_clean.xlsx"))
