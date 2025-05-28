@@ -91,11 +91,12 @@ tpr$Ward <- str_trim(tpr$Ward)
 
 tpr <- tpr %>% 
   mutate(tested_u5 = (rdt_u5 + micro_u5),
-                 pos_u5 = (rdt_pos_u5 + micro_pos_u5),
                  tested_a5 = (rdt_a5 + micro_a5),
                  pos_a5 = (rdt_pos_a5 + micro_pos_a5),
                  tested_pw = (rdt_pw + micro_pw),
                  pos_pw = (rdt_pos_pw + micro_pos_pw))
+
+tpr$pos_u5 <- rowSums(cbind(tpr$rdt_pos_u5, tpr$micro_pos_u5), na.rm = TRUE)
 
 # filter by state
 adamawa_tpr <- tpr %>% dplyr::filter(State == "Adamawa State")
@@ -106,37 +107,28 @@ osun_tpr <- tpr %>% dplyr::filter(State == "Osun State")
 adamawa_tpr_summary <- adamawa_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
-
-adamawa_tpr_final <- adamawa_tpr_summary %>%
-  dplyr::select(WardName, LGA, u5_tpr_rdt)
 
 # KWARA: summarize and calculate u5 TPR by ward and LGA
 kwara_tpr_summary <- kwara_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
-
-kwara_tpr_final <- kwara_tpr_summary %>%
-  dplyr::select(WardName, LGA, u5_tpr_rdt)
 
 # OSUN: summarize and calculate u5 TPR by ward and LGA
 osun_tpr_summary <- osun_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
-
-osun_tpr_final <- osun_tpr_summary %>%
-  dplyr::select(WardName, LGA, u5_tpr_rdt)
 
 ## =========================================================================================================================================
 ### Clean ward names in TPR data to match the extracted data
@@ -147,11 +139,11 @@ osun_tpr_final <- osun_tpr_summary %>%
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 
 adamawa_extracted <- read.csv(file.path(PackageDataDir, "extractions/Adamawa_wards_variables.csv"))
-adamawa_code_lookup <- adamawa_extracted %>% dplyr::select(ward_name, ward_code)
+adamawa_code_lookup <- adamawa_extracted %>% dplyr::select(WardName, WardCode)
 
 # identify mismatches between tpr data and extracted data
-tpr_unique <- unique(adamawa_tpr_final$WardName)
-extracted_unique <- unique(adamawa_extracted$ward_name)
+tpr_unique <- unique(adamawa_tpr_summary$WardName)
+extracted_unique <- unique(adamawa_extracted$WardName)
 missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
 missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
 cat("Wards in TPR data but not in extracted data:\n")
@@ -160,7 +152,7 @@ cat("\nWards in extracted data but not in TPR data:\n")
 print(missing_in_tpr)
 
 # recode adamawa wards
-adamawa_tpr_final <- adamawa_tpr_final %>%
+adamawa_tpr_summary <- adamawa_tpr_summary %>%
   mutate(WardName = recode(WardName,
                        "Mayo-Nguli" = "Mayo Nguli",
                        "Nasarawo" = "Nassarawo (Mubi South LGA)",
@@ -214,26 +206,26 @@ adamawa_tpr_final <- adamawa_tpr_final %>%
   ))
 
 # add ward code to adamawa tpr data
-adamawa_tpr_final <- adamawa_tpr_final %>% 
-  left_join(adamawa_code_lookup, by = c("WardName" = "ward_name"))
+adamawa_tpr_summary <- adamawa_tpr_summary %>% 
+  left_join(adamawa_code_lookup, by = "WardName") %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
-adamawa_tpr_final <- adamawa_tpr_final %>% 
-  rename(WardCode = ward_code) %>% 
+adamawa_tpr_summary <- adamawa_tpr_summary %>% 
   dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
 
 # save to R package data folder
-write.csv(adamawa_tpr_final, file = file.path(PackageDataDir, "TPR/adamawatpr_updated.csv"), row.names = FALSE)
+write.csv(adamawa_tpr_summary, file = file.path(PackageDataDir, "TPR/adamawatpr_updated.csv"), row.names = FALSE)
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 ### Clean Kwara
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 
 kwara_extracted <- read.csv(file.path(PackageDataDir, "extractions/Kwara_wards_variables.csv"))
-kwara_code_lookup <- kwara_extracted %>% dplyr::select(ward_name, ward_code)
+kwara_code_lookup <- kwara_extracted %>% dplyr::select(WardName, WardCode)
 
 # identify mismatches between tpr data and extracted data
-tpr_unique <- unique(kwara_tpr_final$WardName)
-extracted_unique <- unique(kwara_extracted$ward_name)
+tpr_unique <- unique(kwara_tpr_summary$WardName)
+extracted_unique <- unique(kwara_extracted$WardName)
 missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
 missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
 cat("Wards in TPR data but not in extracted data:\n")
@@ -241,7 +233,7 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in TPR data:\n")
 print(missing_in_tpr)
 
-kwara_tpr_final <- kwara_tpr_final %>%
+kwara_tpr_summary <- kwara_tpr_summary %>%
   mutate(WardName = recode(WardName,
                        "Aboto-Odo-Ode" = "Aboto/Odoode",
                        "Agbeyangi/Abadamu" = "Agbeyangi/Gbadamu",
@@ -326,28 +318,26 @@ kwara_tpr_final <- kwara_tpr_final %>%
   ))
 
 # add ward code to adamawa tpr data
-kwara_tpr_final <- kwara_tpr_final %>% 
-  left_join(kwara_code_lookup, by = c("WardName" = "ward_name"))
+kwara_tpr_summary <- kwara_tpr_summary %>% 
+  left_join(kwara_code_lookup, by = "WardName") %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
-kwara_tpr_final <- kwara_tpr_final %>% 
-  rename(WardCode = ward_code) %>% 
+kwara_tpr_summary <- kwara_tpr_summary %>% 
   dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
 
 # save to R package data folder
-write.csv(kwara_tpr_final, file = file.path(PackageDataDir, "TPR/kwaratpr_updated.csv"), row.names = FALSE)
+write.csv(kwara_tpr_summary, file = file.path(PackageDataDir, "TPR/kwaratpr_updated.csv"), row.names = FALSE)
 
 ## -----------------------------------------------------------------------------------------------------------------------------------------
 ### Clean Osun
 ## -----------------------------------------------------------------------------------------------------------------------------------------
-osun_tpr_final <- osun_tpr_summary %>%
-  dplyr::select(WardName, LGA, u5_tpr_rdt)
 
 osun_extracted <- read.csv(file.path(PackageDataDir, "extractions/Osun_wards_variables.csv"))
-osun_code_lookup <- osun_extracted %>% dplyr::select(ward_name, ward_code)
+osun_code_lookup <- osun_extracted %>% dplyr::select(WardName, WardCode)
 
 # identify mismatches between tpr data and extracted data
-tpr_unique <- unique(osun_tpr_final$WardName)
-extracted_unique <- unique(osun_extracted$ward_name)
+tpr_unique <- unique(osun_tpr_summary$WardName)
+extracted_unique <- unique(osun_extracted$WardName)
 missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
 missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
 cat("Wards in TPR data but not in extracted data:\n")
@@ -355,7 +345,7 @@ print(missing_in_extracted)
 cat("\nWards in extracted data but not in TPR data:\n")
 print(missing_in_tpr)
 
-osun_tpr_final <- osun_tpr_final %>%
+osun_tpr_summary <- osun_tpr_summary %>%
   mutate(WardName = recode(WardName,
       "1 - Telemu" = "Telemu",
       "Ilaji  7" = "Ilaji",
@@ -588,10 +578,10 @@ osun_tpr_final <- osun_tpr_final %>%
       "Sokoto" = "Sokoto/Forest Reserve  II",
       "Omisore 6" = "Omisore/Ileogbo  II"))
       
-osun_tpr_final <- osun_tpr_final %>%
+osun_tpr_summary <- osun_tpr_summary %>%
   dplyr::filter(!(WardName == "Balogun" & LGA == "Ayedaade "))
 
-osun_tpr_final <- osun_tpr_final %>%
+osun_tpr_summary <- osun_tpr_summary %>%
   mutate(
     WardName = str_trim(WardName),
     LGA = str_trim(LGA)
@@ -610,12 +600,12 @@ osun_tpr_final <- osun_tpr_final %>%
   )
 
 # add ward code to adamawa tpr data
-osun_tpr_final <- osun_tpr_final %>% 
-  left_join(osun_code_lookup, by = c("WardName" = "ward_name"))
+osun_tpr_summary <- osun_tpr_summary %>% 
+  left_join(osun_code_lookup, by = "WardName") %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
-osun_tpr_final <- osun_tpr_final %>% 
-  rename(WardCode = ward_code) %>% 
+osun_tpr_summary <- osun_tpr_summary %>% 
   dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
 
 # save to R package data folder
-write.csv(osun_tpr_final, file = file.path(PackageDataDir, "TPR/osuntpr_updated.csv"), row.names = FALSE)
+write.csv(osun_tpr_summary, file = file.path(PackageDataDir, "TPR/osuntpr_updated.csv"), row.names = FALSE)
