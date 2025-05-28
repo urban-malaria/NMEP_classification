@@ -79,7 +79,7 @@ tpr <- tpr %>%
          micro_pw = `Persons presenting with fever and tested by Microscopy Preg Women (PW)`,
          micro_pos_pw = `Persons tested positive for malaria by Microscopy Preg Women (PW)`,
          deaths_u5 = `Deaths < 5 Malaria - U5`) %>% 
-  mutate(National = str_replace_all(National, "ng", ""),
+         mutate(National = str_replace_all(National, "ng", ""),
          State = str_remove(State, "^[a-zA-Z]{2}\\s+"),
          LGA = str_remove(LGA, "^[a-zA-Z]{2}\\s+"),
          LGA = str_replace_all(LGA, "Local Government Area", ""),
@@ -92,11 +92,10 @@ tpr$Ward <- str_trim(tpr$Ward)
 tpr <- tpr %>% 
   mutate(tested_u5 = (rdt_u5 + micro_u5),
                  tested_a5 = (rdt_a5 + micro_a5),
+                 pos_u5 = (rdt_pos_u5 + micro_pos_u5),
                  pos_a5 = (rdt_pos_a5 + micro_pos_a5),
                  tested_pw = (rdt_pw + micro_pw),
                  pos_pw = (rdt_pos_pw + micro_pos_pw))
-
-tpr$pos_u5 <- rowSums(cbind(tpr$rdt_pos_u5, tpr$micro_pos_u5), na.rm = TRUE)
 
 # filter by state
 adamawa_tpr <- tpr %>% dplyr::filter(State == "Adamawa State")
@@ -107,7 +106,15 @@ osun_tpr <- tpr %>% dplyr::filter(State == "Osun State")
 adamawa_tpr_summary <- adamawa_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
+    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -116,7 +123,15 @@ adamawa_tpr_summary <- adamawa_tpr %>%
 kwara_tpr_summary <- kwara_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
+    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -125,7 +140,15 @@ kwara_tpr_summary <- kwara_tpr %>%
 osun_tpr_summary <- osun_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), # TPR in U5 children with fever
+    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -207,11 +230,10 @@ adamawa_tpr_summary <- adamawa_tpr_summary %>%
 
 # add ward code to adamawa tpr data
 adamawa_tpr_summary <- adamawa_tpr_summary %>% 
-  left_join(adamawa_code_lookup, by = "WardName") %>% 
-  rename(u5_tpr_rdt = u5_tpr2)
+  left_join(adamawa_code_lookup, by = "WardName")
 
 adamawa_tpr_summary <- adamawa_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
 
 # save to R package data folder
 write.csv(adamawa_tpr_summary, file = file.path(PackageDataDir, "TPR/adamawatpr_updated.csv"), row.names = FALSE)
@@ -319,11 +341,10 @@ kwara_tpr_summary <- kwara_tpr_summary %>%
 
 # add ward code to adamawa tpr data
 kwara_tpr_summary <- kwara_tpr_summary %>% 
-  left_join(kwara_code_lookup, by = "WardName") %>% 
-  rename(u5_tpr_rdt = u5_tpr2)
+  left_join(kwara_code_lookup, by = "WardName")
 
 kwara_tpr_summary <- kwara_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
 
 # save to R package data folder
 write.csv(kwara_tpr_summary, file = file.path(PackageDataDir, "TPR/kwaratpr_updated.csv"), row.names = FALSE)
@@ -601,11 +622,117 @@ osun_tpr_summary <- osun_tpr_summary %>%
 
 # add ward code to adamawa tpr data
 osun_tpr_summary <- osun_tpr_summary %>% 
-  left_join(osun_code_lookup, by = "WardName") %>% 
-  rename(u5_tpr_rdt = u5_tpr2)
+  left_join(osun_code_lookup, by = "WardName")
 
 osun_tpr_summary <- osun_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
 
 # save to R package data folder
 write.csv(osun_tpr_summary, file = file.path(PackageDataDir, "TPR/osuntpr_updated.csv"), row.names = FALSE)
+
+
+## =========================================================================================================================================
+### Map TPR calculation methods
+## =========================================================================================================================================
+
+methods <- c("u5_tpr", "u5_tpr_rdt", "u5_tpr_micro", 
+             "u5_tpr2", "u5_tpr2_rdt", "u5_tpr2_micro", 
+             "u5_tpr3", "u5_tpr3_rdt", "u5_tpr3_micro")
+
+# state shapefiles
+adamawa_shp <- st_read(file.path(PackageDataDir, "shapefiles/Adamawa/Adamawa.shp"))
+kwara_shp <- st_read(file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"))
+osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"))
+
+map_tpr <- function(state_shapefile, state_tpr_data, methods) {
+  
+  # join shapefile and data
+  tpr_shp <- state_shapefile %>%
+    left_join(state_tpr_data, by = "WardName")
+  
+  # create a list to store plots
+  plot_list <- list()
+  
+  # loop over each method
+  for (method in methods) {
+    # convert method name to character (if it's a symbol or object)
+    method_name <- as.character(substitute(method))
+    if (inherits(method, "name")) method <- as.character(method)
+    
+    # make the map
+    p <- ggplot(tpr_shp) +
+      geom_sf(aes_string(fill = method)) +
+      scale_fill_gradientn(
+        colors = c("grey80", "pink", "darkred"),  # grey for 0, pink to red
+        values = scales::rescale(c(0, 0.01, 1)),  # emphasize grey near 0
+        na.value = "grey80",
+        limits = c(0, NA),  # force 0 to appear in scale
+      ) +
+      labs(title = paste("TPR:", method), fill = "TPR") +
+      theme_manuscript()
+    
+    # add to list
+    plot_list[[method]] <- p
+  }
+  
+  return(plot_list)
+}
+
+map_tpr_include_zero <- function(state_shapefile, state_tpr_data, methods) {
+  
+  # join shapefile and data
+  tpr_shp <- state_shapefile %>%
+    left_join(state_tpr_data, by = "WardName")
+  
+  # create a list to store plots
+  plot_list <- list()
+  
+  # loop over each method
+  for (method in methods) {
+    # convert method name to character (if it's a symbol or object)
+    method_name <- as.character(substitute(method))
+    if (inherits(method, "name")) method <- as.character(method)
+    
+    # make the map
+    p <- ggplot(tpr_shp) +
+      geom_sf(aes_string(fill = method)) +
+      scale_fill_gradientn(
+        colors = c("pink", "darkred"),  # grey for 0, pink to red
+        na.value = "grey80",
+      ) +
+      labs(title = paste("TPR:", method), fill = "TPR") +
+      theme_manuscript()
+    
+    # add to list
+    plot_list[[method]] <- p
+  }
+  
+  return(plot_list)
+}
+
+adamawa_maps <- map_tpr(adamawa_shp, adamawa_tpr_summary, methods)
+kwara_maps <- map_tpr(kwara_shp, kwara_tpr_summary, methods)
+osun_maps <- map_tpr(osun_shp, osun_tpr_summary, methods)
+adamawa_maps_include_zero <- map_tpr_include_zero(adamawa_shp, adamawa_tpr_summary, methods)
+kwara_maps_include_zero <- map_tpr_include_zero(kwara_shp, kwara_tpr_summary, methods)
+osun_maps_include_zero <- map_tpr_include_zero(osun_shp, osun_tpr_summary, methods)
+
+library(patchwork)
+FigDir <-  file.path("/Users/grace/Urban Malaria Proj Dropbox/urban_malaria/projects/urban_microstratification/NetSmartR/tpr_plots")
+
+adamawa_grid <- wrap_plots(adamawa_maps, ncol = 3)
+kwara_grid <- wrap_plots(kwara_maps, ncol = 3)
+osun_grid <- wrap_plots(osun_maps, ncol = 3)
+adamawa_grid_include_zero <- wrap_plots(adamawa_maps_include_zero, ncol = 3)
+kwara_grid_include_zero <- wrap_plots(kwara_maps_include_zero, ncol = 3)
+osun_grid_include_zero <- wrap_plots(osun_maps_include_zero, ncol = 3)
+
+ggsave(file.path(FigDir, "Adamawa_TPR_Maps.pdf"), adamawa_grid, width = 14, height = 10)
+ggsave(file.path(FigDir, "Kwara_TPR_Maps.pdf"), kwara_grid, width = 14, height = 10)
+ggsave(file.path(FigDir, "Osun_TPR_Maps.pdf"), osun_grid, width = 14, height = 10)
+ggsave(file.path(FigDir, "Adamawa_TPR_Maps_include_zero.pdf"), adamawa_grid_include_zero, width = 14, height = 10)
+ggsave(file.path(FigDir, "Kwara_TPR_Maps_include_zero.pdf"), kwara_grid_include_zero, width = 14, height = 10)
+ggsave(file.path(FigDir, "Osun_TPR_Maps_include_zero.pdf"), osun_grid_include_zero, width = 14, height = 10)
+
+
+
