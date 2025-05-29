@@ -89,6 +89,13 @@ tpr <- tpr %>%
 
 tpr$Ward <- str_trim(tpr$Ward)
 
+# remove observations for which both rdt_pos_u5 and micro_pos_u5 are NA
+#tpr <- tpr[!(is.na(tpr$rdt_pos_u5) & is.na(tpr$micro_pos_u5)), ]
+
+# if rdt_pos_u5 or micro_pos_u5 are NA, set to 0
+tpr$rdt_pos_u5 <- ifelse(is.na(tpr$rdt_pos_u5), 0, tpr$rdt_pos_u5)
+tpr$micro_pos_u5 <- ifelse(is.na(tpr$micro_pos_u5), 0, tpr$micro_pos_u5)
+
 tpr <- tpr %>% 
   mutate(tested_u5 = (rdt_u5 + micro_u5),
                  tested_a5 = (rdt_a5 + micro_a5),
@@ -109,8 +116,8 @@ adamawa_tpr_summary <- adamawa_tpr %>%
     #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
     #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
     #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
-    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
     #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
     #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
     #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
@@ -126,8 +133,8 @@ kwara_tpr_summary <- kwara_tpr %>%
     #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
     #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
     #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
-    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
     #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
     #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
     #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
@@ -143,8 +150,8 @@ osun_tpr_summary <- osun_tpr %>%
     #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
     #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
     #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
-    u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
+    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
     #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
     #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
     #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
@@ -163,16 +170,6 @@ osun_tpr_summary <- osun_tpr %>%
 
 adamawa_extracted <- read.csv(file.path(PackageDataDir, "extractions/Adamawa_wards_variables.csv"))
 adamawa_code_lookup <- adamawa_extracted %>% dplyr::select(WardName, WardCode)
-
-# identify mismatches between tpr data and extracted data
-tpr_unique <- unique(adamawa_tpr_summary$WardName)
-extracted_unique <- unique(adamawa_extracted$WardName)
-missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
-missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
-cat("Wards in TPR data but not in extracted data:\n")
-print(missing_in_extracted)
-cat("\nWards in extracted data but not in TPR data:\n")
-print(missing_in_tpr)
 
 # recode adamawa wards
 adamawa_tpr_summary <- adamawa_tpr_summary %>%
@@ -228,14 +225,24 @@ adamawa_tpr_summary <- adamawa_tpr_summary %>%
                        "Wagga  (Madagali)" = "Waga-Chakawa"
   ))
 
+# check that ward names match between tpr data and extracted data (Adamawa has a perfect match)
+tpr_unique <- unique(adamawa_tpr_summary$WardName)
+extracted_unique <- unique(adamawa_extracted$WardName)
+missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
+missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
+cat("Wards in TPR data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in TPR data:\n")
+print(missing_in_tpr)
+
 # add ward code to adamawa tpr data
 adamawa_tpr_summary <- adamawa_tpr_summary %>% 
   left_join(adamawa_code_lookup, by = "WardName")
 
 adamawa_tpr_summary <- adamawa_tpr_summary %>% 
   #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
-  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
-  rename(u5_tpr_rdt = u5_tpr2_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2) %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
 # save to R package data folder
 write.csv(adamawa_tpr_summary, file = file.path(PackageDataDir, "TPR/adamawatpr_updated.csv"), row.names = FALSE)
@@ -246,16 +253,6 @@ write.csv(adamawa_tpr_summary, file = file.path(PackageDataDir, "TPR/adamawatpr_
 
 kwara_extracted <- read.csv(file.path(PackageDataDir, "extractions/Kwara_wards_variables.csv"))
 kwara_code_lookup <- kwara_extracted %>% dplyr::select(WardName, WardCode)
-
-# identify mismatches between tpr data and extracted data
-tpr_unique <- unique(kwara_tpr_summary$WardName)
-extracted_unique <- unique(kwara_extracted$WardName)
-missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
-missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
-cat("Wards in TPR data but not in extracted data:\n")
-print(missing_in_extracted)
-cat("\nWards in extracted data but not in TPR data:\n")
-print(missing_in_tpr)
 
 kwara_tpr_summary <- kwara_tpr_summary %>%
   mutate(WardName = recode(WardName,
@@ -341,14 +338,24 @@ kwara_tpr_summary <- kwara_tpr_summary %>%
                        "Gure/Giwasoro" = "Yashikira 2"
   ))
 
+# check that ward names match between tpr data and extracted data (Kwara has some wards that are in the shapefile/extracted data but not our TPR data)
+tpr_unique <- unique(kwara_tpr_summary$WardName)
+extracted_unique <- unique(kwara_extracted$WardName)
+missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
+missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
+cat("Wards in TPR data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in TPR data:\n")
+print(missing_in_tpr)
+
 # add ward code to adamawa tpr data
 kwara_tpr_summary <- kwara_tpr_summary %>% 
   left_join(kwara_code_lookup, by = "WardName")
 
 kwara_tpr_summary <- kwara_tpr_summary %>% 
   #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
-  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
-  rename(u5_tpr_rdt = u5_tpr2_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2) %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
 # save to R package data folder
 write.csv(kwara_tpr_summary, file = file.path(PackageDataDir, "TPR/kwaratpr_updated.csv"), row.names = FALSE)
@@ -359,16 +366,6 @@ write.csv(kwara_tpr_summary, file = file.path(PackageDataDir, "TPR/kwaratpr_upda
 
 osun_extracted <- read.csv(file.path(PackageDataDir, "extractions/Osun_wards_variables.csv"))
 osun_code_lookup <- osun_extracted %>% dplyr::select(WardName, WardCode)
-
-# identify mismatches between tpr data and extracted data
-tpr_unique <- unique(osun_tpr_summary$WardName)
-extracted_unique <- unique(osun_extracted$WardName)
-missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
-missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
-cat("Wards in TPR data but not in extracted data:\n")
-print(missing_in_extracted)
-cat("\nWards in extracted data but not in TPR data:\n")
-print(missing_in_tpr)
 
 osun_tpr_summary <- osun_tpr_summary %>%
   mutate(WardName = recode(WardName,
@@ -624,14 +621,24 @@ osun_tpr_summary <- osun_tpr_summary %>%
     )
   )
 
+# check that ward names match between tpr data and extracted data (Osun has some wards that are in the shapefile/extracted data but not our TPR data)
+tpr_unique <- unique(osun_tpr_summary$WardName)
+extracted_unique <- unique(osun_extracted$WardName)
+missing_in_extracted <- setdiff(tpr_unique, extracted_unique)
+missing_in_tpr <- setdiff(extracted_unique, tpr_unique)
+cat("Wards in TPR data but not in extracted data:\n")
+print(missing_in_extracted)
+cat("\nWards in extracted data but not in TPR data:\n")
+print(missing_in_tpr)
+
 # add ward code to osun tpr data
 osun_tpr_summary <- osun_tpr_summary %>% 
   left_join(osun_code_lookup, by = "WardName")
 
 osun_tpr_summary <- osun_tpr_summary %>% 
   #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
-  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
-  rename(u5_tpr_rdt = u5_tpr2_rdt)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2) %>% 
+  rename(u5_tpr_rdt = u5_tpr2)
 
 # save to R package data folder
 write.csv(osun_tpr_summary, file = file.path(PackageDataDir, "TPR/osuntpr_updated.csv"), row.names = FALSE)
