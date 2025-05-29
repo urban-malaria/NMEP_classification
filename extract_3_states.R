@@ -106,15 +106,15 @@ osun_tpr <- tpr %>% dplyr::filter(State == "Osun State")
 adamawa_tpr_summary <- adamawa_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
-    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
     u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
-    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
-    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
-    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
-    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
+    #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    #u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -123,15 +123,15 @@ adamawa_tpr_summary <- adamawa_tpr %>%
 kwara_tpr_summary <- kwara_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
-    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
     u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
-    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
-    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
-    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
-    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
+    #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    #u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -140,15 +140,15 @@ kwara_tpr_summary <- kwara_tpr %>%
 osun_tpr_summary <- osun_tpr %>%
   group_by(Ward, LGA) %>%
   summarise(
-    u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
-    u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
-    u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
-    u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
+    #u5_tpr = sum(pos_u5, na.rm = TRUE) / sum(tested_u5, na.rm = TRUE),           # combined TPR
+    #u5_tpr_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(rdt_u5, na.rm = TRUE),     # RDT TPR 
+    #u5_tpr_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(micro_u5, na.rm = TRUE), # Microscopy TPR 
+    #u5_tpr2 = sum(pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),           # TPR in U5 children with fever
     u5_tpr2_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE),  # 
-    u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
-    u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
-    u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
-    u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
+    #u5_tpr2_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(fever_u5, na.rm = TRUE), 
+    #u5_tpr3 = sum(pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),           # TPR U5 children in proportion to general hospital attendance
+    #u5_tpr3_rdt = sum(rdt_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE),  
+    #u5_tpr3_micro = sum(micro_pos_u5, na.rm = TRUE) / sum(gen_attd, na.rm = TRUE) 
   ) %>% 
   ungroup() %>% 
   rename(WardName = Ward)
@@ -233,7 +233,9 @@ adamawa_tpr_summary <- adamawa_tpr_summary %>%
   left_join(adamawa_code_lookup, by = "WardName")
 
 adamawa_tpr_summary <- adamawa_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
+  rename(u5_tpr_rdt = u5_tpr2_rdt)
 
 # save to R package data folder
 write.csv(adamawa_tpr_summary, file = file.path(PackageDataDir, "TPR/adamawatpr_updated.csv"), row.names = FALSE)
@@ -344,7 +346,9 @@ kwara_tpr_summary <- kwara_tpr_summary %>%
   left_join(kwara_code_lookup, by = "WardName")
 
 kwara_tpr_summary <- kwara_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
+  rename(u5_tpr_rdt = u5_tpr2_rdt)
 
 # save to R package data folder
 write.csv(kwara_tpr_summary, file = file.path(PackageDataDir, "TPR/kwaratpr_updated.csv"), row.names = FALSE)
@@ -620,12 +624,14 @@ osun_tpr_summary <- osun_tpr_summary %>%
     )
   )
 
-# add ward code to adamawa tpr data
+# add ward code to osun tpr data
 osun_tpr_summary <- osun_tpr_summary %>% 
   left_join(osun_code_lookup, by = "WardName")
 
 osun_tpr_summary <- osun_tpr_summary %>% 
-  dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  #dplyr::select(WardCode, WardName, LGA, u5_tpr, u5_tpr_rdt, u5_tpr_micro, u5_tpr2, u5_tpr2_rdt, u5_tpr2_micro, u5_tpr3, u5_tpr3_rdt, u5_tpr3_micro)
+  dplyr::select(WardCode, WardName, LGA, u5_tpr2_rdt) %>% 
+  rename(u5_tpr_rdt = u5_tpr2_rdt)
 
 # save to R package data folder
 write.csv(osun_tpr_summary, file = file.path(PackageDataDir, "TPR/osuntpr_updated.csv"), row.names = FALSE)
