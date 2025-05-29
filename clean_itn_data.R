@@ -940,7 +940,7 @@ writexl::write_xlsx(niger_itn, file.path(PackageDataDir, "ITN/pbi_distribution_N
 # read in ITN data and extracted data
 osun_itn_data <- read.csv(file.path(ITNDir, "pbi_distribution_Osun.csv"))
 osun_extracted_data <- read.csv(file.path(ExtractedDir, "Osun_wards_variables.csv")) %>% arrange(ward_name)
-osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/Osun.shp")) %>% arrange(ward_name)
+osun_shp <- st_read(file.path(PackageDataDir, "shapefiles/Osun/Osun.shp")) %>% arrange(WardName)
 
 osun_itn_clean <- osun_itn_data %>%
   rename(population = `N_FamilyMembers`,
@@ -1290,6 +1290,9 @@ osun_shp <- osun_shp %>%
   ) %>% 
   dplyr::select(-country_na, -country_co, -state_name, -source_dat)
 
+# reproject shapefile to EPSG:4326 (WGS 84 latitude/longitude)
+osun_shp <- st_transform(osun_shp, 4326)
+
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(osun_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Osun_clean.xlsx"))
 st_write(osun_shp, file.path(PackageDataDir, "shapefiles/Osun/Osun.shp"), delete_layer = TRUE)
@@ -1580,6 +1583,9 @@ kwara_shp <- kwara_shp %>%
   ) %>% 
   dplyr::select(-country_na, -country_co, -state_name, -source_dat)
 
+# reproject shapefile to EPSG:4326 (WGS 84 latitude/longitude)
+kwara_shp <- st_transform(kwara_shp, 4326)
+
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(kwara_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Kwara_clean.xlsx"))
 st_write(kwara_shp, file.path(PackageDataDir, "shapefiles/Kwara/Kwara.shp"), delete_layer = TRUE)
@@ -1719,6 +1725,9 @@ adamawa_shp <- adamawa_shp %>%
     Geometry = geometry
   ) %>% 
   dplyr::select(-country_na, -country_co, -state_name, -source_dat)
+
+# reproject shapefile to EPSG:4326 (WGS 84 latitude/longitude)
+adamawa_shp <- st_transform(adamawa_shp, 4326)
 
 # save cleaned versions of itn data and shapefile
 writexl::write_xlsx(adamawa_itn_clean, file.path(PackageDataDir, "ITN/pbi_distribution_Adamawa_clean.xlsx"))
